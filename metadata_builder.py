@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# usage: build_new.py metadata.xml before.xml after.xml
+# usage: metadata_builder.py metadata.xml before.xml after.xml
 
 import sys
 import re
@@ -166,10 +166,10 @@ def add_funding(root, statement):
 	return root
 constructors.append([add_funding, [get_funding_statement]])
 
-#hack for extra SI in the body, remove later
+# remove SI in body if they exist
 def strip_body_si(root):
 	for fig in root.xpath("//fig"):
-		if re.search('figS[0-9]',fig.attrib['id']):
+		if re.search('figS[0-9]', fig.attrib['id']):
 			fig.getparent().remove(fig)
 	return root
 constructors.append([strip_body_si, []])
@@ -178,32 +178,31 @@ def fix_figures(root, doi):
 	i = 1
 	for fig in root.xpath("//fig"):
 		fig_doi = doi[-12:]+".g"+str(i).zfill(3)
-		fig_id = re.sub('\.','-',fig_doi)
+		fig_id = re.sub('\.', '-', fig_doi)
 		for xref in root.xpath("//xref[@ref-type='fig']"):
 			if xref.attrib['rid'] == fig.attrib['id']:
 				xref.attrib['rid'] = fig_id
-		fig.attrib['id']=fig_id
+		fig.attrib['id'] = fig_id
 		fig.insert(0, etree.fromstring("""<object-id pub-id-type="doi">10.1371/journal.%s</object-id>""" % fig_doi))
 		fig.xpath("graphic")[0].attrib["{http://www.w3.org/1999/xlink}href"]=fig_doi+".tif"
 		i += 1
 	return root
 constructors.append([fix_figures, [get_article_doi]])
 
-#need to augment this to add nimetypes, file extensions, 
 def fix_si(root, doi):
 	i = 1
 	for si in root.xpath("//supplementary-material"):
 		si_doi = doi[-12:]+".s"+str(i).zfill(3)
-		si_id = re.sub('\.','-',si_doi)
-		#because merops is assigning the wrong ref-type. it should be ref-type="supplementary-material"
+		si_id = re.sub('\.', '-', si_doi)
+		# should be ref-type="supplementary-material"
 		for xref in root.xpath("//xref[@ref-type='fig']"):
-			#however, merops is using a different naming convention for the rid and the id, will never match
+			# rid and id currently don't match
 			if xref.attrib['rid'] == si.attrib['id']:
 				xref.attrib['rid'] = si_doi
-		si.attrib['id']=si_doi
-		#don't assume they are all *tif, need to add mimetype
+		si.attrib['id'] = si_doi
+		# use actual extension, add mimetype
 		si.attrib["{http://www.w3.org/1999/xlink}href"]=si_doi+".tif"
-		#when I wrote this, all the supplementary-material elements had <graphic> children. so I removed them. Might not still be true. 
+		# remove graphic children if they exist
 		for graphic in si.xpath("graphic"):
 			graphic.getparent().remove(graphic)
 		i += 1
@@ -212,10 +211,10 @@ constructors.append([fix_si, [get_article_doi]])
 
 if __name__ == '__main__':
 	if len(sys.argv) != 4:
-		sys.exit('usage: build_new.py metadata.xml before.xml after.xml')
+		sys.exit('usage: metadata_builder.py metadata.xml before.xml after.xml')
 	parser = etree.XMLParser(recover = True, remove_comments = True)
-	m = etree.parse(sys.argv[1],parser).getroot()
-	e = etree.parse(sys.argv[2],parser)
+	m = etree.parse(sys.argv[1], parser).getroot()
+	e = etree.parse(sys.argv[2], parser)
 	root = e.getroot()
 	for constructor, subfunctions in constructors:
 		root = constructor(root, *map(lambda x: x(m), subfunctions))
