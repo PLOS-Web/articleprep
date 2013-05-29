@@ -1,4 +1,4 @@
 articleprep
 ===========
 
-tools to prepare plos journal articles for publication
+tools to prepare [PLoS](http://www.plos.org/) journal articles for publication
