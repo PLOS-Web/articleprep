@@ -14,6 +14,10 @@ def metadata(root):
 def metadata_files(root):
     return [f.attrib['{http://www.w3.org/1999/xlink}href'] for f in root.xpath("//fig/graphic") + root.xpath("//supplementary-material")]
 
+def doi(guidzip):
+    go = etree.parse(guidzip.replace('zip', 'go.xml')).getroot()
+    print go.xpath("//parameter[@name='DOI']")[0].attrib['value']
+
 def manuscript(guidzip):
     go = etree.parse(guidzip.replace('zip', 'go.xml')).getroot()
     meta_xml = z.ZipFile(guidzip).open(metadata(go))
