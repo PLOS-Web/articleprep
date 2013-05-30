@@ -13,6 +13,7 @@ def get_journal(m):
 def add_journal_meta(root, journal):
 	j = {'plosbiol':"PLoS Biol", 'plosmed':"PLoS Med", 'ploscomp':"PLoS Comput Biol", 'plosgen':"PLoS Genet",
 		 'plospath':"PLoS Pathog", 'plosone':"PLoS ONE", 'plosntds':"PLoS Negl Trop Dis"}
+	issn = root.xpath("//issn[@pub-type='ppub']")[0].text
 	for front in root.xpath("//front"):
 		front.remove(front.xpath("journal-meta")[0])
 		front.insert(0, etree.fromstring("""<journal-meta>
@@ -20,10 +21,10 @@ def add_journal_meta(root, journal):
 		<journal-id journal-id-type="publisher-id">plos</journal-id>
 		<journal-id journal-id-type="pmc">%s</journal-id>
 		<journal-title-group><journal-title>%s</journal-title></journal-title-group>
-		<issn pub-type="epub">1932-6203</issn>
+		<issn pub-type="epub">%s</issn>
 		<publisher><publisher-name>Public Library of Science</publisher-name>
 		<publisher-loc>San Francisco, USA</publisher-loc></publisher>
-		</journal-meta>""" % (j[journal], journal, j[journal])))
+		</journal-meta>""" % (j[journal], journal, j[journal], issn)))
 	return root
 constructors.append([add_journal_meta, [get_journal]])
 
