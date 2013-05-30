@@ -22,6 +22,6 @@ def manuscript(guidzip):
     print list(set(go_files(go)) - set(metadata_files(meta)))    
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 2 or sys.argv[1][-4:] != '.zip':
         sys.exit('usage: manuscript_extractor.py guid.zip')
     manuscript(sys.argv[1])
