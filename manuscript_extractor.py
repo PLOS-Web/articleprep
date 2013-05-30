@@ -15,10 +15,9 @@ def metadata_files(root):
     return [f.attrib['{http://www.w3.org/1999/xlink}href'] for f in root.xpath("//fig/graphic") + root.xpath("//supplementary-material")]
 
 def manuscript(guidzip):
-    parser = etree.XMLParser(recover = True)
-    go = etree.parse(guidzip.replace('zip', 'go.xml'), parser).getroot()
+    go = etree.parse(guidzip.replace('zip', 'go.xml')).getroot()
     meta_xml = z.ZipFile(guidzip).open(metadata(go))
-    meta = etree.parse(meta_xml, parser).getroot()
+    meta = etree.parse(meta_xml).getroot()
     print list(set(go_files(go)) - set(metadata_files(meta)))
 
 if __name__ == '__main__':
