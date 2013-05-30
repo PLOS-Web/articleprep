@@ -17,9 +17,9 @@ def metadata_files(root):
 def manuscript(guidzip):
     parser = etree.XMLParser(recover = True)
     go = etree.parse(guidzip.replace('zip', 'go.xml'), parser).getroot()
-    meta_xml = z.ZipFile(guidzip).extract(metadata(go))
+    meta_xml = z.ZipFile(guidzip).open(metadata(go))
     meta = etree.parse(meta_xml, parser).getroot()
-    print list(set(go_files(go)) - set(metadata_files(meta)))    
+    print list(set(go_files(go)) - set(metadata_files(meta)))
 
 if __name__ == '__main__':
     if len(sys.argv) != 2 or sys.argv[1][-4:] != '.zip':
