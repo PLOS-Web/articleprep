@@ -3,6 +3,7 @@
 
 import sys
 import re
+import copy
 import lxml.etree as etree
 
 constructors = []
@@ -82,27 +83,35 @@ constructors.append([add_contrib, [get_contrib]])
 
 def get_author_notes_index(root):
 	am = root.xpath("//article-meta")[0]
-	author_notes = am.xpath("author_notes")[0]
+	author_notes = am.xpath("author-notes")[0]
 	return am.index(author_notes)
 
-def get_pubdate(m):
-	return m.xpath("//pub-date[@pub-type='epub']")[0]
+def get_collection(m):
+	return str(int(m.xpath("//pub-date[@pub-type='epub']/year")[0].text))
 
-def add_collection(root, date):
-	for article_meta in root.xpath("//article-meta"):
-		article_meta.insert(get_author_notes_index(root) + 1, date)
+def add_collection(root, collection):
+	article_meta = root.xpath("//article-meta")[0]
+	for node in article_meta.xpath("pub-date[@pub-type='collection']"):
+		article_meta.remove(node)
+	article_meta.insert(get_author_notes_index(root) + 1, etree.fromstring("""
+		<pub-date pub-type="collection"><year>%s</year></pub-date>""" % collection))
 	return root
-constructors.append([add_collection, [get_pubdate]])
+constructors.append([add_collection, [get_collection]])
+
+def get_pubdate(m):
+	return copy.deepcopy(m.xpath("//pub-date[@pub-type='epub']")[0])
 
 def add_pubdate(root, date):
-	for article_meta in root.xpath("//article-meta"):
-		article_meta.insert(get_author_notes_index(root) + 2, date)
+	article_meta = root.xpath("//article-meta")[0]
+	for node in article_meta.xpath("pub-date[@pub-type='epub']"):
+		article_meta.remove(node)
+	article_meta.insert(get_author_notes_index(root) + 2, date)
 	return root
 constructors.append([add_pubdate, [get_pubdate]])
 
 def get_volume(m):
     volumes = {'plosbiol':2002, 'plosmed':2003, 'ploscomp':2004, 'plosgen':2004, 'plospath':2004, 'plosone':2005, 'plosntds':2006}
-    year = m.xpath("//date[@date-type='epub']/year")[0].text
+    year = m.xpath("//pub-date[@pub-type='epub']/year")[0].text
     return str(int(year) - volumes[get_journal(m)])
 
 def add_volume(root, volume):
@@ -112,7 +121,7 @@ def add_volume(root, volume):
 constructors.append([add_volume, [get_volume]])
 
 def get_issue(m):
-	return str(int(m.xpath("//date[@date-type='epub']/month")[0].text))
+	return str(int(m.xpath("//pub-date[@pub-type='epub']/month")[0].text))
 
 def add_issue(root, issue):
 	for article_meta in root.xpath("//article-meta"):
