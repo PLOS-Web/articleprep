@@ -11,10 +11,12 @@ constructors = []
 def get_journal(m):
 	return m.xpath("//journal-id[@journal-id-type='publisher']")[0].text
 
-def add_journal_meta(root, journal):
+def get_issn(m):
+	return m.xpath("//issn[@pub-type='ppub']")[0].text
+
+def add_journal_meta(root, journal, issn):
 	j = {'plosbiol':"PLoS Biol", 'plosmed':"PLoS Med", 'ploscomp':"PLoS Comput Biol", 'plosgen':"PLoS Genet",
 		 'plospath':"PLoS Pathog", 'plosone':"PLoS ONE", 'plosntds':"PLoS Negl Trop Dis"}
-	issn = root.xpath("//issn[@pub-type='ppub']")[0].text
 	front = root.xpath("//front")[0]
 	for node in front.xpath("journal-meta"):
 		front.remove(node)
@@ -28,7 +30,7 @@ def add_journal_meta(root, journal):
 	<publisher-loc>San Francisco, USA</publisher-loc></publisher>
 	</journal-meta>""" % (j[journal], journal, j[journal], issn)))
 	return root
-constructors.append([add_journal_meta, [get_journal]])
+constructors.append([add_journal_meta, [get_journal, get_issn]])
 
 def get_ms_number(m):
 	return m.xpath("//article-id[@pub-id-type='manuscript']")[0].text
@@ -102,7 +104,7 @@ def add_collection(root, collection):
 	article_meta = root.xpath("//article-meta")[0]
 	for node in article_meta.xpath("pub-date[@pub-type='collection']"):
 		article_meta.remove(node)
-	article_meta.insert(get_author_notes_index(root) + 1, etree.fromstring("<pub-date pub-type="collection"><year>%s</year></pub-date>" % collection))
+	article_meta.insert(get_author_notes_index(root) + 1, etree.fromstring("<pub-date pub-type='collection'><year>%s</year></pub-date>" % collection))
 	return root
 constructors.append([add_collection, [get_collection]])
 
