@@ -15,17 +15,18 @@ def add_journal_meta(root, journal):
 	j = {'plosbiol':"PLoS Biol", 'plosmed':"PLoS Med", 'ploscomp':"PLoS Comput Biol", 'plosgen':"PLoS Genet",
 		 'plospath':"PLoS Pathog", 'plosone':"PLoS ONE", 'plosntds':"PLoS Negl Trop Dis"}
 	issn = root.xpath("//issn[@pub-type='ppub']")[0].text
-	for front in root.xpath("//front"):
-		front.remove(front.xpath("journal-meta")[0])
-		front.insert(0, etree.fromstring("""<journal-meta>
-		<journal-id journal-id-type="nlm-ta">%s</journal-id>
-		<journal-id journal-id-type="publisher-id">plos</journal-id>
-		<journal-id journal-id-type="pmc">%s</journal-id>
-		<journal-title-group><journal-title>%s</journal-title></journal-title-group>
-		<issn pub-type="epub">%s</issn>
-		<publisher><publisher-name>Public Library of Science</publisher-name>
-		<publisher-loc>San Francisco, USA</publisher-loc></publisher>
-		</journal-meta>""" % (j[journal], journal, j[journal], issn)))
+	front = root.xpath("//front")[0]
+	for node in front.xpath("journal-meta"):
+		front.remove(node)
+	front.insert(0, etree.fromstring("""<journal-meta>
+	<journal-id journal-id-type="nlm-ta">%s</journal-id>
+	<journal-id journal-id-type="publisher-id">plos</journal-id>
+	<journal-id journal-id-type="pmc">%s</journal-id>
+	<journal-title-group><journal-title>%s</journal-title></journal-title-group>
+	<issn pub-type="epub">%s</issn>
+	<publisher><publisher-name>Public Library of Science</publisher-name>
+	<publisher-loc>San Francisco, USA</publisher-loc></publisher>
+	</journal-meta>""" % (j[journal], journal, j[journal], issn)))
 	return root
 constructors.append([add_journal_meta, [get_journal]])
 
@@ -44,8 +45,10 @@ def get_article_doi(m):
 	return m.xpath("//article-id[@pub-id-type='doi']")[0].text
 
 def add_article_doi(root, doi):
-	for article_meta in root.xpath("//article-meta"):
-		article_meta.insert(1, etree.fromstring("""<article-id pub-id-type="doi">%s</article-id>""" % doi))
+	article_meta = root.xpath("//article-meta")[0]
+	for node in article_meta.xpath("article-id[@pub-id-type='doi']"):
+		article_meta.remove(node)
+	article_meta.insert(1, etree.fromstring("""<article-id pub-id-type="doi">%s</article-id>""" % doi))
 	return root
 constructors.append([add_article_doi, [get_article_doi]])
 
@@ -53,9 +56,11 @@ def get_article_type(m):
 	return m.xpath("//article-categories//subj-group[@subj-group-type='Article Type']/subject")[0].text
 
 def add_article_type(root, article_type):
-	for article_meta in root.xpath("//article-meta"):
-		article_meta.insert(2, etree.fromstring("""<article-categories><subj-group subj-group-type="heading">
-		<subject>%s</subject></subj-group></article-categories>""" % article_type))
+	article_meta = root.xpath("//article-meta")[0]
+	for node in article_meta.xpath("article-categories"):
+		article_meta.remove(node)
+	article_meta.insert(2, etree.fromstring("""<article-categories><subj-group subj-group-type="heading">
+	<subject>%s</subject></subj-group></article-categories>""" % article_type))
 	return root
 constructors.append([add_article_type, [get_article_type]])
 
