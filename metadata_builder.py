@@ -32,8 +32,11 @@ def get_ms_number(m):
 	return m.xpath("//article-id[@pub-id-type='manuscript']")[0].text
 
 def add_ms_number(root, ms):
-    root.xpath("//article-meta/article-id[@pub-id-type='publisher-id']")[0].text = ms
-    return root
+	article_meta = root.xpath("//article-meta")[0]
+	for node in article_meta.xpath("article-id[@pub-id-type='publisher-id']"):
+		article_meta.remove(node)
+	article_meta.insert(0, etree.fromstring("""<article-id pub-id-type='publisher-id'>%s</article-id>""" % ms))
+	return root
 constructors.append([add_ms_number, [get_ms_number]])
 
 def get_article_doi(m):
@@ -136,7 +139,7 @@ def get_copyright_holder(m):
 	return m.xpath("//contrib[@contrib-type='author']/role[@content-type='1']")[0].getnext().xpath('surname')[0].text + ' et al'
 
 def get_copyright_statement(m):
-	s = m.xpath("//custom-meta[@id='copyright-statement']/meta-value)[0].getnext().text
+	s = m.xpath("//custom-meta[@id='copyright-statement']/meta-value")[0].text
 	if s.startswith('No'):
 		return 'This is an open-access article distributed under the terms of the Creative Commons Attribution License, which permits unrestricted use, distribution, and reproduction in any medium, provided the original author and source are credited.'
 	if s.startswith('Yes'):
@@ -158,7 +161,7 @@ def get_abstract_index(root):
 	return am.index(abstract)
 
 def get_funding_statement(m):
-	return m.xpath("//custom-meta[@id='financial-disclosure']/meta-value")[0].getnext().text
+	return m.xpath("//custom-meta[@id='financial-disclosure']/meta-value")[0].text
 
 def add_funding(root, statement):
 	for article_meta in root.xpath("//article-meta"):
