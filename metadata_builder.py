@@ -102,8 +102,7 @@ def add_collection(root, collection):
 	article_meta = root.xpath("//article-meta")[0]
 	for node in article_meta.xpath("pub-date[@pub-type='collection']"):
 		article_meta.remove(node)
-	article_meta.insert(get_author_notes_index(root) + 1, etree.fromstring("""
-		<pub-date pub-type="collection"><year>%s</year></pub-date>""" % collection))
+	article_meta.insert(get_author_notes_index(root) + 1, etree.fromstring("<pub-date pub-type="collection"><year>%s</year></pub-date>" % collection))
 	return root
 constructors.append([add_collection, [get_collection]])
 
@@ -157,11 +156,13 @@ def get_accepted_date(m):
 	return m.xpath("//date[@date-type='accepted']")[0]
 
 def add_history(root, received, accepted):
+	article_meta = root.xpath("//article-meta")[0]
+	for node in article_meta.xpath("history"):
+		article_meta.remove(node)
 	history = etree.Element('history')
 	history.append(received)
 	history.append(accepted)
-	for article_meta in root.xpath("//article-meta"):
-		article_meta.insert(get_author_notes_index(root) + 6, history)
+	article_meta.insert(get_author_notes_index(root) + 6, history)
 	return root
 constructors.append([add_history, [get_received_date, get_accepted_date]])
 
@@ -176,12 +177,14 @@ def get_copyright_statement(m):
 		return 'This is an open-access article distributed under the terms of the Creative Commons Public Domain declaration which stipulates that, once placed in the public domain, this work may be freely reproduced, distributed, transmitted, modified, built upon, or otherwise used by anyone for any lawful purpose.'
 
 def add_permissions(root, pubdate, holder, statement):
+	article_meta = root.xpath("//article-meta")[0]
+	for node in article_meta.xpath("permissions"):
+		article_meta.remove(node)
 	year = pubdate.xpath("year")[0].text
-	for article_meta in root.xpath("//article-meta"):
-		article_meta.insert(get_author_notes_index(root) + 7, etree.fromstring("""<permissions xmlns:xlink="http://www.w3.org/1999/xlink">
-        <copyright-year>%s</copyright-year><copyright-holder>%s</copyright-holder>
-        <license xlink:type="simple"><license-p>%s</license-p></license>
-      	</permissions>""" % (year, holder, statement)))
+	article_meta.insert(get_author_notes_index(root) + 7, etree.fromstring("""<permissions xmlns:xlink="http://www.w3.org/1999/xlink">
+    <copyright-year>%s</copyright-year><copyright-holder>%s</copyright-holder>
+    <license xlink:type="simple"><license-p>%s</license-p></license>
+  	</permissions>""" % (year, holder, statement)))
 	return root
 constructors.append([add_permissions, [get_pubdate, get_copyright_holder, get_copyright_statement]])
 
@@ -189,9 +192,10 @@ def get_funding_statement(m):
 	return m.xpath("//custom-meta[@id='financial-disclosure']/meta-value")[0].text
 
 def add_funding(root, statement):
-	for article_meta in root.xpath("//article-meta"):
-		article_meta.append(etree.fromstring("""
-			<funding-group><funding-statement>%s</funding-statement></funding-group>""" % statement))
+	article_meta = root.xpath("//article-meta")[0]
+	for node in article_meta.xpath("funding-group"):
+		article_meta.remove(node)
+	article_meta.append(etree.fromstring("""<funding-group><funding-statement>%s</funding-statement></funding-group>""" % statement))
 	return root
 constructors.append([add_funding, [get_funding_statement]])
 
