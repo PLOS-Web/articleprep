@@ -80,17 +80,23 @@ def add_contrib(root, contrib):
 	return root
 constructors.append([add_contrib, [get_contrib]])
 
-def get_collection_index(root):
+def get_author_notes_index(root):
 	am = root.xpath("//article-meta")[0]
-	coll = am.xpath("pub-date[@pub-type='collection']")[0]
-	return am.index(coll)
+	author_notes = am.xpath("author_notes")[0]
+	return am.index(author_notes)
 
 def get_pubdate(m):
 	return m.xpath("//pub-date[@pub-type='epub']")[0]
 
+def add_collection(root, date):
+	for article_meta in root.xpath("//article-meta"):
+		article_meta.insert(get_author_notes_index(root) + 1, date)
+	return root
+constructors.append([add_collection, [get_pubdate]])
+
 def add_pubdate(root, date):
 	for article_meta in root.xpath("//article-meta"):
-		article_meta.insert(get_collection_index(root) + 1, date)
+		article_meta.insert(get_author_notes_index(root) + 2, date)
 	return root
 constructors.append([add_pubdate, [get_pubdate]])
 
@@ -101,7 +107,7 @@ def get_volume(m):
 
 def add_volume(root, volume):
 	for article_meta in root.xpath("//article-meta"):
-		article_meta.insert(get_collection_index(root) + 2, etree.fromstring("""<volume>%s</volume>""" % volume))
+		article_meta.insert(get_author_notes_index(root) + 3, etree.fromstring("""<volume>%s</volume>""" % volume))
 	return root
 constructors.append([add_volume, [get_volume]])
 
@@ -110,13 +116,13 @@ def get_issue(m):
 
 def add_issue(root, issue):
 	for article_meta in root.xpath("//article-meta"):
-		article_meta.insert(get_collection_index(root) + 3, etree.fromstring("""<issue>%s</issue>""" % issue))
+		article_meta.insert(get_author_notes_index(root) + 4, etree.fromstring("""<issue>%s</issue>""" % issue))
 	return root
 constructors.append([add_issue, [get_issue]])
 
 def add_elocation(root, doi):
 	for article_meta in root.xpath("//article-meta"):
-		article_meta.insert(get_collection_index(root) + 4, etree.fromstring("""<elocation-id>e%s</elocation-id>""" % doi[-5:]))
+		article_meta.insert(get_author_notes_index(root) + 5, etree.fromstring("""<elocation-id>e%s</elocation-id>""" % doi[-5:]))
 	return root
 constructors.append([add_elocation, [get_article_doi]])
 
@@ -131,7 +137,7 @@ def add_history(root, received, accepted):
 	history.append(received)
 	history.append(accepted)
 	for article_meta in root.xpath("//article-meta"):
-		article_meta.insert(get_collection_index(root) + 5, history)
+		article_meta.insert(get_author_notes_index(root) + 6, history)
 	return root
 constructors.append([add_history, [get_received_date, get_accepted_date]])
 
@@ -148,24 +154,19 @@ def get_copyright_statement(m):
 def add_permissions(root, pubdate, holder, statement):
 	year = pubdate.xpath("year")[0].text
 	for article_meta in root.xpath("//article-meta"):
-		article_meta.insert(get_collection_index(root) + 6, etree.fromstring("""<permissions xmlns:xlink="http://www.w3.org/1999/xlink">
+		article_meta.insert(get_author_notes_index(root) + 7, etree.fromstring("""<permissions xmlns:xlink="http://www.w3.org/1999/xlink">
         <copyright-year>%s</copyright-year><copyright-holder>%s</copyright-holder>
         <license xlink:type="simple"><license-p>%s</license-p></license>
       	</permissions>""" % (year, holder, statement)))
 	return root
 constructors.append([add_permissions, [get_pubdate, get_copyright_holder, get_copyright_statement]])
 
-def get_abstract_index(root):
-	am = root.xpath("//article-meta")[0]
-	abstract = am.xpath("abstract")[-1]
-	return am.index(abstract)
-
 def get_funding_statement(m):
 	return m.xpath("//custom-meta[@id='financial-disclosure']/meta-value")[0].text
 
 def add_funding(root, statement):
 	for article_meta in root.xpath("//article-meta"):
-		article_meta.insert(get_abstract_index(root) + 1, etree.fromstring("""
+		article_meta.append(etree.fromstring("""
 			<funding-group><funding-statement>%s</funding-statement></funding-group>""" % statement))
 	return root
 constructors.append([add_funding, [get_funding_statement]])
