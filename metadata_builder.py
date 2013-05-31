@@ -68,8 +68,10 @@ def get_conflict(m):
 	return m.xpath("//custom-meta[@id='conflict']/meta-value")[0].text
 
 def add_conflict(root, conflict):
-	for author_notes in root.xpath("//article-meta/author-notes"):
-		author_notes.insert(1, etree.fromstring("""<fn fn-type="conflict"><p>%s</p></fn>""" % conflict))
+	author_notes = root.xpath("//author-notes")[0]
+	for node in author_notes.xpath("fn[@fn-type='conflict']"):
+		author_notes.remove(node)
+	author_notes.insert(1, etree.fromstring("""<fn fn-type="conflict"><p>%s</p></fn>""" % conflict))
 	return root
 constructors.append([add_conflict, [get_conflict]])
 
@@ -81,8 +83,10 @@ def get_contrib(m):
 	return result
 
 def add_contrib(root, contrib):
-	for author_notes in root.xpath("//article-meta/author-notes"):
-		author_notes.insert(2, etree.fromstring("""<fn fn-type="con"><p>%s</p></fn>""" % contrib))
+	author_notes = root.xpath("//author-notes")[0]
+	for node in author_notes.xpath("fn[@fn-type='con']"):
+		author_notes.remove(node)
+	author_notes.insert(2, etree.fromstring("""<fn fn-type="con"><p>%s</p></fn>""" % contrib))
 	return root
 constructors.append([add_contrib, [get_contrib]])
 
@@ -120,8 +124,10 @@ def get_volume(m):
     return str(int(year) - volumes[get_journal(m)])
 
 def add_volume(root, volume):
-	for article_meta in root.xpath("//article-meta"):
-		article_meta.insert(get_author_notes_index(root) + 3, etree.fromstring("""<volume>%s</volume>""" % volume))
+	article_meta = root.xpath("//article-meta")[0]
+	for node in article_meta.xpath("volume"):
+		article_meta.remove(node)
+	article_meta.insert(get_author_notes_index(root) + 3, etree.fromstring("""<volume>%s</volume>""" % volume))
 	return root
 constructors.append([add_volume, [get_volume]])
 
@@ -129,14 +135,18 @@ def get_issue(m):
 	return str(int(m.xpath("//pub-date[@pub-type='epub']/month")[0].text))
 
 def add_issue(root, issue):
-	for article_meta in root.xpath("//article-meta"):
-		article_meta.insert(get_author_notes_index(root) + 4, etree.fromstring("""<issue>%s</issue>""" % issue))
+	article_meta = root.xpath("//article-meta")[0]
+	for node in article_meta.xpath("issue"):
+		article_meta.remove(node)
+	article_meta.insert(get_author_notes_index(root) + 4, etree.fromstring("""<issue>%s</issue>""" % issue))
 	return root
 constructors.append([add_issue, [get_issue]])
 
 def add_elocation(root, doi):
-	for article_meta in root.xpath("//article-meta"):
-		article_meta.insert(get_author_notes_index(root) + 5, etree.fromstring("""<elocation-id>e%s</elocation-id>""" % doi[-5:]))
+	article_meta = root.xpath("//article-meta")[0]
+	for node in article_meta.xpath("elocation-id"):
+		article_meta.remove(node)
+	article_meta.insert(get_author_notes_index(root) + 5, etree.fromstring("""<elocation-id>e%s</elocation-id>""" % doi[-5:]))
 	return root
 constructors.append([add_elocation, [get_article_doi]])
 
