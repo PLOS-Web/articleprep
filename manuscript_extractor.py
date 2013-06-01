@@ -22,7 +22,7 @@ def manuscript(guidzip):
     go = etree.parse(guidzip.replace('zip', 'go.xml')).getroot()
     meta_xml = z.ZipFile(guidzip).open(metadata(go))
     meta = etree.parse(meta_xml).getroot()
-    print list(set(go_files(go)) - set(metadata_files(meta)))
+    print list(set(go_files(go)) - set(metadata_files(meta)))[0]
 
 if __name__ == '__main__':
     if len(sys.argv) != 2 or sys.argv[1][-4:] != '.zip':
