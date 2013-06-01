@@ -22,7 +22,12 @@ def manuscript(guidzip):
     go = etree.parse(guidzip.replace('zip', 'go.xml')).getroot()
     meta_xml = z.ZipFile(guidzip).open(metadata(go))
     meta = etree.parse(meta_xml).getroot()
-    print list(set(go_files(go)) - set(metadata_files(meta)))[0]
+    m = list(set(go_files(go)) - set(metadata_files(meta)))
+    if len(m) != 1:
+        raise Exception(str(len(m)) + " potential manuscripts found")
+    if m[0][-4:] != '.doc':
+        raise Exception(m[0] + " may not be a doc file")
+    print m[0]
 
 if __name__ == '__main__':
     if len(sys.argv) != 2 or sys.argv[1][-4:] != '.zip':
