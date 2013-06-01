@@ -10,6 +10,10 @@ import lxml.etree as etree
 
 constructors = []
 
+def remove_possible_node(parent, child):
+	for node in parent.xpath(child):
+		parent.remove(node)
+
 def get_journal(m):
 	return m.xpath("//journal-id[@journal-id-type='publisher']")[0].text
 
@@ -20,8 +24,7 @@ def add_journal_meta(root, journal, issn):
 	j = {'plosbiol':"PLoS Biol", 'plosmed':"PLoS Med", 'ploscomp':"PLoS Comput Biol", 'plosgen':"PLoS Genet",
 		 'plospath':"PLoS Pathog", 'plosone':"PLoS ONE", 'plosntds':"PLoS Negl Trop Dis"}
 	front = root.xpath("//front")[0]
-	for node in front.xpath("journal-meta"):
-		front.remove(node)
+	remove_possible_node(front, "journal-meta")
 	front.insert(0, etree.fromstring("""<journal-meta>
 	<journal-id journal-id-type="nlm-ta">%s</journal-id>
 	<journal-id journal-id-type="publisher-id">plos</journal-id>
@@ -39,8 +42,7 @@ def get_ms_number(m):
 
 def add_ms_number(root, ms):
 	article_meta = root.xpath("//article-meta")[0]
-	for node in article_meta.xpath("article-id[@pub-id-type='publisher-id']"):
-		article_meta.remove(node)
+	remove_possible_node(article_meta, "article-id[@pub-id-type='publisher-id']")
 	article_meta.insert(0, etree.fromstring("""<article-id pub-id-type='publisher-id'>%s</article-id>""" % ms))
 	return root
 constructors.append([add_ms_number, [get_ms_number]])
@@ -50,8 +52,7 @@ def get_article_doi(m):
 
 def add_article_doi(root, doi):
 	article_meta = root.xpath("//article-meta")[0]
-	for node in article_meta.xpath("article-id[@pub-id-type='doi']"):
-		article_meta.remove(node)
+	remove_possible_node(article_meta, "article-id[@pub-id-type='doi']")
 	article_meta.insert(1, etree.fromstring("""<article-id pub-id-type="doi">%s</article-id>""" % doi))
 	return root
 constructors.append([add_article_doi, [get_article_doi]])
@@ -61,8 +62,7 @@ def get_article_type(m):
 
 def add_article_type(root, article_type):
 	article_meta = root.xpath("//article-meta")[0]
-	for node in article_meta.xpath("article-categories"):
-		article_meta.remove(node)
+	remove_possible_node(article_meta, "article-categories")
 	article_meta.insert(2, etree.fromstring("""<article-categories><subj-group subj-group-type="heading">
 	<subject>%s</subject></subj-group></article-categories>""" % article_type))
 	return root
@@ -73,8 +73,7 @@ def get_conflict(m):
 
 def add_conflict(root, conflict):
 	author_notes = root.xpath("//author-notes")[0]
-	for node in author_notes.xpath("fn[@fn-type='conflict']"):
-		author_notes.remove(node)
+	remove_possible_node(author_notes, "fn[@fn-type='conflict']")
 	author_notes.insert(1, etree.fromstring("""<fn fn-type="conflict"><p>%s</p></fn>""" % conflict))
 	return root
 constructors.append([add_conflict, [get_conflict]])
@@ -82,14 +81,12 @@ constructors.append([add_conflict, [get_conflict]])
 def get_contrib(m):
 	result = ''
 	for au in m.xpath("//meta-name[contains(text(),'Author Contributions')]"):
-		result += re.sub(r'.*Author Contributions: ([^<]*).*', r'\1', au.text.replace('\n','')).capitalize() \
-			+ ': ' + au.getnext().text + '. '
+		result += re.sub(r'.*Author Contributions: ([^<]*).*', r'\1', au.text.replace('\n','')).capitalize() + ': ' + au.getnext().text + '. '
 	return result
 
 def add_contrib(root, contrib):
 	author_notes = root.xpath("//author-notes")[0]
-	for node in author_notes.xpath("fn[@fn-type='con']"):
-		author_notes.remove(node)
+	remove_possible_node(author_notes, "fn[@fn-type='con']")
 	author_notes.insert(2, etree.fromstring("""<fn fn-type="con"><p>%s</p></fn>""" % contrib))
 	return root
 constructors.append([add_contrib, [get_contrib]])
@@ -104,8 +101,7 @@ def get_collection(m):
 
 def add_collection(root, collection):
 	article_meta = root.xpath("//article-meta")[0]
-	for node in article_meta.xpath("pub-date[@pub-type='collection']"):
-		article_meta.remove(node)
+	remove_possible_node(article_meta, "pub-date[@pub-type='collection']")
 	article_meta.insert(get_author_notes_index(root) + 1, etree.fromstring("<pub-date pub-type='collection'><year>%s</year></pub-date>" % collection))
 	return root
 constructors.append([add_collection, [get_collection]])
@@ -115,8 +111,7 @@ def get_pubdate(m):
 
 def add_pubdate(root, date):
 	article_meta = root.xpath("//article-meta")[0]
-	for node in article_meta.xpath("pub-date[@pub-type='epub']"):
-		article_meta.remove(node)
+	remove_possible_node(article_meta, "pub-date[@pub-type='epub']")
 	article_meta.insert(get_author_notes_index(root) + 2, date)
 	return root
 constructors.append([add_pubdate, [get_pubdate]])
@@ -128,8 +123,7 @@ def get_volume(m):
 
 def add_volume(root, volume):
 	article_meta = root.xpath("//article-meta")[0]
-	for node in article_meta.xpath("volume"):
-		article_meta.remove(node)
+	remove_possible_node(article_meta, "volume")
 	article_meta.insert(get_author_notes_index(root) + 3, etree.fromstring("""<volume>%s</volume>""" % volume))
 	return root
 constructors.append([add_volume, [get_volume]])
@@ -139,16 +133,14 @@ def get_issue(m):
 
 def add_issue(root, issue):
 	article_meta = root.xpath("//article-meta")[0]
-	for node in article_meta.xpath("issue"):
-		article_meta.remove(node)
+	remove_possible_node(article_meta, "issue")
 	article_meta.insert(get_author_notes_index(root) + 4, etree.fromstring("""<issue>%s</issue>""" % issue))
 	return root
 constructors.append([add_issue, [get_issue]])
 
 def add_elocation(root, doi):
 	article_meta = root.xpath("//article-meta")[0]
-	for node in article_meta.xpath("elocation-id"):
-		article_meta.remove(node)
+	remove_possible_node(article_meta, "elocation-id")
 	article_meta.insert(get_author_notes_index(root) + 5, etree.fromstring("""<elocation-id>e%s</elocation-id>""" % doi[-5:]))
 	return root
 constructors.append([add_elocation, [get_article_doi]])
@@ -161,8 +153,7 @@ def get_accepted_date(m):
 
 def add_history(root, received, accepted):
 	article_meta = root.xpath("//article-meta")[0]
-	for node in article_meta.xpath("history"):
-		article_meta.remove(node)
+	remove_possible_node(article_meta, "history")
 	history = etree.Element('history')
 	history.append(received)
 	history.append(accepted)
@@ -182,13 +173,11 @@ def get_copyright_statement(m):
 
 def add_permissions(root, pubdate, holder, statement):
 	article_meta = root.xpath("//article-meta")[0]
-	for node in article_meta.xpath("permissions"):
-		article_meta.remove(node)
+	remove_possible_node(article_meta, "permissions")
 	year = pubdate.xpath("year")[0].text
 	article_meta.insert(get_author_notes_index(root) + 7, etree.fromstring("""<permissions xmlns:xlink="http://www.w3.org/1999/xlink">
-    <copyright-year>%s</copyright-year><copyright-holder>%s</copyright-holder>
-    <license xlink:type="simple"><license-p>%s</license-p></license>
-  	</permissions>""" % (year, holder, statement)))
+    <copyright-year>%s</copyright-year><copyright-holder>%s</copyright-holder><license xlink:type="simple"><license-p>%s</license-p></license>
+    </permissions>""" % (year, holder, statement)))
 	return root
 constructors.append([add_permissions, [get_pubdate, get_copyright_holder, get_copyright_statement]])
 
@@ -197,8 +186,7 @@ def get_funding_statement(m):
 
 def add_funding(root, statement):
 	article_meta = root.xpath("//article-meta")[0]
-	for node in article_meta.xpath("funding-group"):
-		article_meta.remove(node)
+	remove_possible_node(article_meta, "funding-group")
 	article_meta.append(etree.fromstring("""<funding-group><funding-statement>%s</funding-statement></funding-group>""" % statement))
 	return root
 constructors.append([add_funding, [get_funding_statement]])
