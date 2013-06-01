@@ -3,7 +3,9 @@
 
 import sys
 import re
+import time
 import copy
+import logging
 import lxml.etree as etree
 
 constructors = []
@@ -245,16 +247,20 @@ constructors.append([fix_si, [get_article_doi]])
 if __name__ == '__main__':
 	if len(sys.argv) != 4:
 		sys.exit('usage: metadata_builder.py metadata.xml before.xml after.xml')
+	log = open('log', 'a')
+	log.write('-' * 80 + '\n' + time.strftime("%Y-%m-%d %H:%M:%S") + '  ' + ' '.join(sys.argv[1:]) + '\n')
 	try:
 		parser = etree.XMLParser(recover = True, remove_comments = True)
 		m = etree.parse(sys.argv[1], parser).getroot()
 		e = etree.parse(sys.argv[2], parser)
 		root = e.getroot()
 	except Exception as ee:
-		print '** error parsing: ' + str(ee)
+		log.write('** error parsing: ' + str(ee) + '\n')
+		log.close()
 		raise
 	for constructor, subfunctions in constructors:
 		try: root = constructor(root, *map(lambda x: x(m), subfunctions))
-		except Exception as ee: print '** error in ' + constructor.__name__ + ': ' + str(ee)
+		except Exception as ee: log.write('** error in ' + constructor.__name__ + ': ' + str(ee) + '\n')
 	e.write(sys.argv[3], xml_declaration = True, encoding = 'UTF-8')
+	log.close()
 	print 'done'
