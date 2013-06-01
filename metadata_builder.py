@@ -212,14 +212,14 @@ constructors.append([strip_body_si, []])
 def fix_figures(root, doi):
 	i = 1
 	for fig in root.xpath("//fig"):
-		fig_doi = doi[-12:]+".g"+str(i).zfill(3)
+		fig_doi = doi[-12:] + ".g" + str(i).zfill(3)
 		fig_id = re.sub('\.', '-', fig_doi)
 		for xref in root.xpath("//xref[@ref-type='fig']"):
 			if xref.attrib['rid'] == fig.attrib['id']:
 				xref.attrib['rid'] = fig_id
 		fig.attrib['id'] = fig_id
 		fig.insert(0, etree.fromstring("""<object-id pub-id-type="doi">10.1371/journal.%s</object-id>""" % fig_doi))
-		fig.xpath("graphic")[0].attrib["{http://www.w3.org/1999/xlink}href"]=fig_doi+".tif"
+		fig.xpath("graphic")[0].attrib["{http://www.w3.org/1999/xlink}href"] = fig_doi + ".tif"
 		i += 1
 	return root
 constructors.append([fix_figures, [get_article_doi]])
@@ -227,19 +227,17 @@ constructors.append([fix_figures, [get_article_doi]])
 def fix_si(root, doi):
 	i = 1
 	for si in root.xpath("//supplementary-material"):
-		si_doi = doi[-12:]+".s"+str(i).zfill(3)
+		si_doi = doi[-12:] + ".s" +str(i).zfill(3)
 		si_id = re.sub('\.', '-', si_doi)
-		# should be ref-type="supplementary-material"
-		for xref in root.xpath("//xref[@ref-type='fig']"):
-			# rid and id currently don't match
+		for xref in root.xpath("//xref[@ref-type='supplementary-material']"):
 			if xref.attrib['rid'] == si.attrib['id']:
 				xref.attrib['rid'] = si_doi
 		si.attrib['id'] = si_doi
-		# use actual extension, add mimetype
-		si.attrib["{http://www.w3.org/1999/xlink}href"]=si_doi+".tif"
+		# filetype unknown from merops output; default to tif
+		si.attrib["{http://www.w3.org/1999/xlink}href"] = si_doi + ".tif"
 		# remove graphic children if they exist
 		for graphic in si.xpath("graphic"):
-			graphic.getparent().remove(graphic)
+			si.remove(graphic)
 		i += 1
 	return root
 constructors.append([fix_si, [get_article_doi]])
