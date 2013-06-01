@@ -245,11 +245,16 @@ constructors.append([fix_si, [get_article_doi]])
 if __name__ == '__main__':
 	if len(sys.argv) != 4:
 		sys.exit('usage: metadata_builder.py metadata.xml before.xml after.xml')
-	parser = etree.XMLParser(recover = True, remove_comments = True)
-	m = etree.parse(sys.argv[1], parser).getroot()
-	e = etree.parse(sys.argv[2], parser)
-	root = e.getroot()
+	try:
+		parser = etree.XMLParser(recover = True, remove_comments = True)
+		m = etree.parse(sys.argv[1], parser).getroot()
+		e = etree.parse(sys.argv[2], parser)
+		root = e.getroot()
+	except Exception as ee:
+		print '** error parsing: ' + str(ee)
+		raise
 	for constructor, subfunctions in constructors:
-		root = constructor(root, *map(lambda x: x(m), subfunctions))
+		try: root = constructor(root, *map(lambda x: x(m), subfunctions))
+		except Exception as ee: print '** error in ' + constructor.__name__ + ': ' + str(ee)
 	e.write(sys.argv[3], xml_declaration = True, encoding = 'UTF-8')
 	print 'done'
