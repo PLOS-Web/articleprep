@@ -230,7 +230,7 @@ def fix_si(root, doi, exts):
             if xref.attrib['rid'] == si.attrib['id']:
                 xref.attrib['rid'] = si_doi
         si.attrib['id'] = si_doi
-        ext = exts[si.xpath("label")[0].text]
+        ext = exts.get(si.xpath("label")[0].text, '')
         si.attrib["{http://www.w3.org/1999/xlink}href"] = si_doi + ext
         try: si.attrib['mimetype'] = mimetypes.guess_type('x' + ext, False)[0]
         except Exception as ee: log.write('** error getting mimetype for ' + si_doi + ext + ': ' + str(ee) + '\n')
