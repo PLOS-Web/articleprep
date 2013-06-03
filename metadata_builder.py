@@ -214,7 +214,14 @@ def fix_figures(root, doi):
     return root
 constructors.append([fix_figures, [get_article_doi]])
 
-def fix_si(root, doi):
+def get_si_ext(m):
+	exts = {}
+	for si in m.xpath("//supplementary-material"):
+		filename = si.attrib['{http://www.w3.org/1999/xlink}href']
+		exts[si.xpath("label")[0].text] = filename[filename.rfind('.'):]
+	return exts
+
+def fix_si(root, doi, exts):
     i = 1
     for si in root.xpath("//supplementary-material"):
         si_doi = doi[-12:] + ".s" +str(i).zfill(3)
@@ -223,14 +230,13 @@ def fix_si(root, doi):
             if xref.attrib['rid'] == si.attrib['id']:
                 xref.attrib['rid'] = si_doi
         si.attrib['id'] = si_doi
-        # filetype unknown from merops output; default to tif
-        si.attrib["{http://www.w3.org/1999/xlink}href"] = si_doi + ".tif"
+        si.attrib["{http://www.w3.org/1999/xlink}href"] = si_doi + exts[si.xpath("label")[0].text]
         # remove graphic children if they exist
         for graphic in si.xpath("graphic"):
             si.remove(graphic)
         i += 1
     return root
-constructors.append([fix_si, [get_article_doi]])
+constructors.append([fix_si, [get_article_doi, get_si_ext]])
 
 if __name__ == '__main__':
     if len(sys.argv) != 4:
