@@ -16,7 +16,7 @@ def metadata_files(root):
 
 def doi(guidzip):
     go = etree.parse(guidzip.replace('zip', 'go.xml')).getroot()
-    print go.xpath("//parameter[@name='DOI']")[0].attrib['value']
+    return go.xpath("//parameter[@name='DOI']")[0].attrib['value']
 
 def manuscript(guidzip):
     go = etree.parse(guidzip.replace('zip', 'go.xml')).getroot()
@@ -28,7 +28,7 @@ def manuscript(guidzip):
     ext = m[0][m[0].rfind('.') + 1:]
     if ext != 'doc' and ext != 'docx':
         raise Exception(m[0] + " may not be a doc file")
-    print m[0]
+    return m[0]
 
 if __name__ == '__main__':
     if len(sys.argv) != 2 or sys.argv[1][-4:] != '.zip':
