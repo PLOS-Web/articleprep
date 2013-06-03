@@ -7,17 +7,26 @@ import subprocess
 def call(command):
     subprocess.call(command.split(), shell = False)
 
-def convert(image):
-    new_image = image.replace('.eps', '.tif')
+def convert(image, new_image, top, bottom):
     call("convert -strip -alpha off -colorspace RGB -depth 8 -trim -bordercolor white -border 1% \
         -units PixelsPerInch -density 300 -resample 300 -resize 2049x2758> -resize 980x2000< \
         +repage -compress lzw " + image + " " + new_image)
-    call("convert -gravity north -crop 100%x5% " + new_image + " " + new_image.replace('.tif', '_top.tif'))
-    call("convert -gravity south -crop 100%x5% " + new_image + " " + new_image.replace('.tif', '_bottom.tif'))
+    call("convert -gravity north -crop 100%x5% " + new_image + " " + top)
+    call("convert -gravity south -crop 100%x5% " + new_image + " " + bottom)
+
+def ocr(new_image, top, bottom):
+    call("tesseract " + new_image + " " + new_image)
+    call("tesseract " + top + " " + top)
+    call("tesseract " + bottom + " " + bottom)
 
 def prepare(images):
     for image in images:
-        convert(image)
+        new_image = image.replace('.eps', '.tif')
+        top = new_image.replace('.tif', '_top.tif')
+        bottom = new_image.replace('.tif', '_bottom.tif')
+
+        convert(image, new_image, top, bottom)
+        ocr(new_image, top, bottom)
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
