@@ -6,15 +6,15 @@ import subprocess
 
 def convert(images):
     for image in images:
-        command = "convert -strip -alpha off -colorspace RGB -depth 8 -trim -bordercolor white -border 1% -units \
-        PixelsPerInch -density 300 -resample 300 -resize 2049x2758> -resize 980x2000< +repage -compress lzw "+image+" "+image
-        subprocess.call(command.split(), shell = False)
-        print command.split()
-
-# ocr step
-# convert -gravity north -crop 100%x5% i.tif i_top.tif
-# convert -gravity south -crop 100%x5% i.tif i_bottom.tif
-# tesseract
+        new_image = image.replace('.eps', '.tif')
+        convert = "convert -strip -alpha off -colorspace RGB -depth 8 -trim -bordercolor white \
+        -border 1% -units PixelsPerInch -density 300 -resample 300 -resize 2049x2758> -resize 980x2000< \
+        +repage -compress lzw " + image + " " + new_image
+        top = "convert -gravity north -crop 100%x5% " + new_image + " " + new_image.replace('.tif', '_top.tif')
+        bottom = "convert -gravity south -crop 100%x5% " + new_image + " " + new_image.replace('.tif', '_bottom.tif')
+        subprocess.call(convert.split(), shell = False)
+        subprocess.call(top.split(), shell = False)
+        subprocess.call(bottom.split(), shell = False)
 
 # output string
 # grep -i (fig|table)
