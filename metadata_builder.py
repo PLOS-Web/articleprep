@@ -5,7 +5,7 @@ import sys
 import re
 import time
 import copy
-import logging
+import mimetypes
 import lxml.etree as etree
 
 constructors = []
@@ -215,11 +215,11 @@ def fix_figures(root, doi):
 constructors.append([fix_figures, [get_article_doi]])
 
 def get_si_ext(m):
-	exts = {}
-	for si in m.xpath("//supplementary-material"):
-		filename = si.attrib['{http://www.w3.org/1999/xlink}href']
-		exts[si.xpath("label")[0].text] = filename[filename.rfind('.'):]
-	return exts
+    exts = {}
+    for si in m.xpath("//supplementary-material"):
+        filename = si.attrib['{http://www.w3.org/1999/xlink}href']
+        exts[si.xpath("label")[0].text] = filename[filename.rfind('.'):]
+    return exts
 
 def fix_si(root, doi, exts):
     i = 1
@@ -230,7 +230,10 @@ def fix_si(root, doi, exts):
             if xref.attrib['rid'] == si.attrib['id']:
                 xref.attrib['rid'] = si_doi
         si.attrib['id'] = si_doi
-        si.attrib["{http://www.w3.org/1999/xlink}href"] = si_doi + exts[si.xpath("label")[0].text]
+        ext = exts[si.xpath("label")[0].text]
+        si.attrib["{http://www.w3.org/1999/xlink}href"] = si_doi + ext
+        try: si.attrib['mimetype'] = mimetypes.guess_type('x' + ext, False)[0]
+        except Exception as ee: log.write('** error getting mimetype for ' + si_doi + ext + ': ' + str(ee) + '\n')
         # remove graphic children if they exist
         for graphic in si.xpath("graphic"):
             si.remove(graphic)
