@@ -19,6 +19,9 @@ def ocr(new_image, top, bottom):
     call("tesseract " + top + " " + top)
     call("tesseract " + bottom + " " + bottom)
 
+def grep(new_image, top, bottom):
+    call("grep -iE (fig|table) " + new_image + ".txt " + top + ".txt " + bottom + ".txt")
+
 def prepare(images):
     for image in images:
         new_image = image.replace('.eps', '.tif')
@@ -27,6 +30,7 @@ def prepare(images):
 
         convert(image, new_image, top, bottom)
         ocr(new_image, top, bottom)
+        grep(new_image, top, bottom)        
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
