@@ -21,8 +21,8 @@ def get_issn(m):
     return m.xpath("//issn[@pub-type='ppub']")[0].text
 
 def add_journal_meta(root, journal, issn):
-    j = {'plosbiol':"PLoS Biol", 'plosmed':"PLoS Med", 'ploscomp':"PLoS Comput Biol", 'plosgen':"PLoS Genet",
-         'plospath':"PLoS Pathog", 'plosone':"PLoS ONE", 'plosntds':"PLoS Negl Trop Dis"}
+    j = {'pbiology':"PLoS Biol", 'pmedicine':"PLoS Med", 'pcompbiol':"PLoS Comput Biol", 'pone':"PLoS ONE",
+         'ppathogens':"PLoS Pathog", 'pntd':"PLoS Negl Trop Dis", 'pgenetics':"PLoS Genet",}
     front = root.xpath("//front")[0]
     remove_possible_node(front, "journal-meta")
     front.insert(0, etree.fromstring("""<journal-meta>
@@ -117,7 +117,7 @@ def add_pubdate(root, date):
 constructors.append([add_pubdate, [get_pubdate]])
 
 def get_volume(m):
-    volumes = {'plosbiol':2002, 'plosmed':2003, 'ploscomp':2004, 'plosgen':2004, 'plospath':2004, 'plosone':2005, 'plosntds':2006}
+    volumes = {'pbiology':2002, 'pmedicine':2003, 'pcompbiol':2004, 'pgenetics':2004, 'ppathogens':2004, 'pone':2005, 'pntd':2006}
     year = m.xpath("//pub-date[@pub-type='epub']/year")[0].text
     return str(int(year) - volumes[get_journal(m)])
 
