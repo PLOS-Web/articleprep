@@ -69,7 +69,7 @@ def add_article_type(root, article_type):
 constructors.append([add_article_type, [get_article_type]])
 
 def get_conflict(m):
-    return m.xpath("//custom-meta[@id='conflict']/meta-value")[0].text
+    return m.xpath("//meta-name[contains(text(),'Competing Interest')]")[0].getnext().text
 
 def add_conflict(root, conflict):
     author_notes = root.xpath("//author-notes")[0]
@@ -165,7 +165,7 @@ def get_copyright_holder(m):
     return m.xpath("//contrib[@contrib-type='author']/role[@content-type='1']")[0].getnext().xpath('surname')[0].text + ' et al'
 
 def get_copyright_statement(m):
-    s = m.xpath("//custom-meta[@id='copyright-statement']/meta-value")[0].text
+    s = m.xpath("//meta-name[contains(text(),'Government Employee')]")[0].getnext().text
     if s.startswith('No'):
         return 'This is an open-access article distributed under the terms of the Creative Commons Attribution License, which permits unrestricted use, distribution, and reproduction in any medium, provided the original author and source are credited.'
     if s.startswith('Yes'):
@@ -182,7 +182,7 @@ def add_permissions(root, pubdate, holder, statement):
 constructors.append([add_permissions, [get_pubdate, get_copyright_holder, get_copyright_statement]])
 
 def get_funding_statement(m):
-    return m.xpath("//custom-meta[@id='financial-disclosure']/meta-value")[0].text
+    return m.xpath("//meta-name[contains(text(),'Financial Disclosure')]")[0].getnext().text
 
 def add_funding(root, statement):
     article_meta = root.xpath("//article-meta")[0]
