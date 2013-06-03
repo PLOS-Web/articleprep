@@ -5,7 +5,8 @@ import sys
 import subprocess
 
 def call(command):
-    subprocess.call(command.split(), shell = False)
+    call = subprocess.Popen(command.split(), stdout = subprocess.PIPE, shell = False)
+    return call.communicate()[0]
 
 def convert(image, new_image, top, bottom):
     call("convert -strip -alpha off -colorspace RGB -depth 8 -trim -bordercolor white -border 1% \
@@ -20,7 +21,9 @@ def ocr(new_image, top, bottom):
     call("tesseract " + bottom + " " + bottom)
 
 def grep(new_image, top, bottom):
-    call("grep -iE (fig|table) " + new_image + ".txt " + top + ".txt " + bottom + ".txt")
+    labels = call("grep -iE (fig|table) " + new_image + ".txt " + top + ".txt " + bottom + ".txt")
+    for label in labels.split()[:1]:
+        print "warning: " + label[:label.index(':')] + " contains label: " + label[label.index(':')+1:]
 
 def prepare(images):
     for image in images:
