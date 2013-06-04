@@ -2,6 +2,7 @@
 # usage: image_processor.py image1 image2 ...
 
 import sys
+import os.path
 import subprocess as sp
 
 def call(command):
@@ -32,13 +33,16 @@ def prepare(images):
     if type(images) is not list:
         raise Exception(images + ' is not a list. please supply a list of images')
     for image in images:
-        new_image = image.replace('.eps', '.tif')
-        top = new_image.replace('.tif', '_top.tif')
-        bottom = new_image.replace('.tif', '_bottom.tif')
-        for step in [convert, ocr, grep]:
-            try: step(image, new_image, top, bottom)
-            except Exception as ee: print '** error in ' + step.__name__ + ': ' + str(ee)
-        call(' '.join(['rm', image if image.endswith('.eps') else '', new_image+'.txt', top, top+'.txt', bottom, bottom+'.txt']))
+        if os.path.isfile(image):
+            new_image = image.replace('.eps', '.tif')
+            top = new_image.replace('.tif', '_top.tif')
+            bottom = new_image.replace('.tif', '_bottom.tif')
+            for step in [convert, ocr, grep]:
+                try: step(image, new_image, top, bottom)
+                except Exception as ee: print '** error in ' + step.__name__ + ': ' + str(ee)
+            call(' '.join(['rm', image if image.endswith('.eps') else '', new_image+'.txt', top, top+'.txt', bottom, bottom+'.txt']))
+        else:
+            print image + ' does not exist'
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
