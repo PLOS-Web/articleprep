@@ -38,6 +38,7 @@ def prepare(images):
         for step in [convert, ocr, grep]:
             try: step(image, new_image, top, bottom)
             except Exception as ee: print '** error in ' + step.__name__ + ': ' + str(ee)
+        call(' '.join(['rm', image if image.endswith('.eps') else '', new_image+'.txt', top, top+'.txt', bottom, bottom+'.txt']))
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
