@@ -244,7 +244,7 @@ constructors.append([fix_si, [get_article_doi, get_si_ext]])
 if __name__ == '__main__':
     if len(sys.argv) != 4:
         sys.exit('usage: metadata_builder.py metadata.xml before.xml after.xml')
-    log = open('log', 'a')
+    log = open('/var/local/scripts/production/articleprep/log/metadata_log', 'a')
     log.write('-' * 80 + '\n' + time.strftime("%Y-%m-%d %H:%M:%S") + '  ' + ' '.join(sys.argv[1:]) + '\n')
     try:
         parser = etree.XMLParser(recover = True, remove_comments = True)
