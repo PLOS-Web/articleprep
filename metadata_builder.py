@@ -21,8 +21,9 @@ def get_issn(m):
     return m.xpath("//issn[@pub-type='ppub']")[0].text
 
 def add_journal_meta(root, journal, issn):
-    j = {'pbiology':"PLoS Biol", 'pmedicine':"PLoS Med", 'pcompbiol':"PLoS Comput Biol", 'pone':"PLoS ONE",
-         'ppathogens':"PLoS Pathog", 'pntd':"PLoS Negl Trop Dis", 'pgenetics':"PLoS Genet",}
+    j = {'pbiology':['PLoS Biol','plosbiol'], 'pmedicine':['PLoS Med','plosmed'], 
+         'pcompbiol':['PLoS Comput Biol','ploscomp'], 'pgenetics':['PLoS Genet','plosgen'], 
+         'ppathogens':['PLoS Pathog','plospath'], 'pone':['PLoS ONE','plosone'], 'pntd':['PLoS Negl Trop Dis','plosntds']}
     front = root.xpath("//front")[0]
     remove_possible_node(front, "journal-meta")
     front.insert(0, etree.fromstring("""<journal-meta>
@@ -33,7 +34,7 @@ def add_journal_meta(root, journal, issn):
     <issn pub-type="epub">%s</issn>
     <publisher><publisher-name>Public Library of Science</publisher-name>
     <publisher-loc>San Francisco, USA</publisher-loc></publisher>
-    </journal-meta>""" % (j[journal], journal, j[journal], issn)))
+    </journal-meta>""" % (j[journal][0], j[journal][1], j[journal][0], issn)))
     return root
 constructors.append([add_journal_meta, [get_journal, get_issn]])
 
