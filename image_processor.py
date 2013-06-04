@@ -26,7 +26,7 @@ def ocr(image, new_image, top, bottom):
 def grep(image, new_image, top, bottom):
     labels = call("grep -iE (fig|table) " + new_image + ".txt " + top + ".txt " + bottom + ".txt")
     for label in labels.split()[:1]:
-        print "warning: " + label[:label.index(':')] + " contains label: " + label[label.index(':')+1:]
+        print "warning: " + label[:label.index(':')].replace('.txt','') + " contains label " + label[label.index(':')+1:]
 
 def prepare(images):
     if type(images) is not list:
