@@ -33,4 +33,5 @@ def manuscript(guidzip):
 if __name__ == '__main__':
     if len(sys.argv) != 2 or sys.argv[1][-4:] != '.zip':
         sys.exit('usage: manuscript_extractor.py guid.zip')
-    manuscript(sys.argv[1])
+    print doi(sys.argv[1])
+    print manuscript(sys.argv[1])
