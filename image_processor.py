@@ -2,14 +2,17 @@
 # usage: image_processor.py image1 image2 ...
 
 import sys
+import time
 import os.path
 import subprocess as sp
+
+output = ''
 
 def call(command):
     call = sp.Popen(command.split(), stdout = sp.PIPE, stderr = sp.PIPE, shell = False)
     output = call.communicate()
     if call.wait() != 0:
-        raise Exception(output[0] or output[1])
+        log.write(output[0] or output[1])
     return output[0]
 
 def convert(image, new_image, top, bottom):
@@ -25,11 +28,13 @@ def ocr(image, new_image, top, bottom):
     call("tesseract " + bottom + " " + bottom)
 
 def grep(image, new_image, top, bottom):
+    global output
     labels = call("grep -iE (fig|table) " + new_image + ".txt " + top + ".txt " + bottom + ".txt")
     for label in labels.split()[:1]:
-        print "warning: " + label[:label.index(':')].replace('.txt','') + " contains label " + label[label.index(':')+1:]
+        output += "warning: "+label[:label.index(':')].replace('.txt','')+" contains label "+label[label.index(':')+1:]+'\n'
 
 def prepare(images):
+    global output
     if type(images) is not list:
         raise Exception(images + ' is not a list. please supply a list of images')
     for image in images:
@@ -39,12 +44,17 @@ def prepare(images):
             bottom = new_image.replace('.tif', '_bottom.tif')
             for step in [convert, ocr, grep]:
                 try: step(image, new_image, top, bottom)
-                except Exception as ee: print '** error in ' + step.__name__ + ': ' + str(ee)
+                except Exception as ee: log.write('** error in ' + step.__name__ + ': ' + str(ee) + '\n')
             call(' '.join(['rm', image if image.endswith('.eps') else '', new_image+'.txt', top, top+'.txt', bottom, bottom+'.txt']))
         else:
-            print image + ' does not exist'
+            output += 'warning: ' + image + ' does not exist\n'
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
         sys.exit('usage: image_processor.py image1 image2 ...')
+    log = open('/var/local/scripts/production/articleprep/log/image_log', 'a')
+    log.write('-' * 80 + '\n' + time.strftime("%Y-%m-%d %H:%M:%S") + '  ' + ' '.join(sys.argv[1:]) + '\n')
     prepare(sys.argv[1:])
+    log.write(output)
+    log.close()
+    print output
