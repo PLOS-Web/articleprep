@@ -9,7 +9,7 @@ import subprocess as sp
 output = ''
 
 def call(command):
-    call = sp.Popen(command.split(), stdout = sp.PIPE, stderr = sp.PIPE, shell = False)
+    call = sp.Popen(command, stdout = sp.PIPE, stderr = sp.PIPE, shell = False)
     output = call.communicate()
     if call.wait() != 0:
         log.write(output[0] or output[1])
@@ -18,20 +18,19 @@ def call(command):
 def convert(image, new_image, top, bottom):
     call("convert -strip -alpha off -colorspace RGB -depth 8 -trim -bordercolor white -border 1% \
         -units PixelsPerInch -density 300 -resample 300 -resize 2049x2758> -resize 980x2000< \
-        +repage -compress lzw " + image + " " + new_image)
-    call("convert -gravity north -crop 100%x5% " + new_image + " " + top)
-    call("convert -gravity south -crop 100%x5% " + new_image + " " + bottom)
+        +repage -compress lzw".split() + [image, new_image])
+    call("convert -gravity north -crop 100%x5%".split() + [new_image, top])
+    call("convert -gravity south -crop 100%x5%".split() + [new_image, bottom])
 
 def ocr(image, new_image, top, bottom):
-    call("tesseract " + new_image + " " + new_image)
-    call("tesseract " + top + " " + top)
-    call("tesseract " + bottom + " " + bottom)
+    call(["tesseract", new_image, new_image])
+    call(["tesseract", top, top])
+    call(["tesseract", bottom, bottom])
 
 def grep(image, new_image, top, bottom):
     global output
-    labels = call("grep -iE (fig|table) " + new_image + ".txt " + top + ".txt " + bottom + ".txt")
-    for label in labels.split()[:1]:
-        output += "warning: "+label[:label.index(':')].replace('.txt','')+" contains label "+label[label.index(':')+1:]+'\n'
+    label = call("grep -iE (fig|table)".split() + [new_image+".txt", top+".txt", bottom+".txt"]).split('\n')[0]
+    output += "warning: "+label[:label.index(':')].replace('.txt','')+" contains label "+label[label.index(':')+1:]+'\n'
 
 def prepare(images):
     global output
@@ -45,7 +44,7 @@ def prepare(images):
             for step in [convert, ocr, grep]:
                 try: step(image, new_image, top, bottom)
                 except Exception as ee: log.write('** error in ' + step.__name__ + ': ' + str(ee) + '\n')
-            call(' '.join(['rm', image if image.endswith('.eps') else '', new_image+'.txt', top, top+'.txt', bottom, bottom+'.txt']))
+            call(['rm', image if image.endswith('.eps') else '', new_image+'.txt', top, top+'.txt', bottom, bottom+'.txt'])
         else:
             output += 'warning: ' + image + ' does not exist\n'
 
