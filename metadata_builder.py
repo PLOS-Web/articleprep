@@ -69,6 +69,16 @@ def add_article_type(root, article_type):
     return root
 constructors.append([add_article_type, [get_article_type]])
 
+def get_alt_title(m):
+    return m.xpath("//alt-title[@alt-title-type='running-head']")[0]
+
+def add_alt_title(root, alt_title):
+    title_group = root.xpath("//title-group")[0]
+    remove_possible_node(title_group, "alt-title[@alt-title-type='running-head']")
+    title_group.insert(1, alt_title)
+    return root
+constructors.append([add_alt_title, [get_alt_title]])    
+
 def get_conflict(m):
     return m.xpath("//meta-name[contains(text(),'Competing Interest')]")[0].getnext().text
 
