@@ -45,7 +45,10 @@ def prepare(images):
             for step in [convert, ocr, grep]:
                 try: step(image, new_image, top, bottom)
                 except Exception as ee: log.write('** error in ' + step.__name__ + ': ' + str(ee) + '\n')
-            call(['rm', image if image.endswith('.eps') else '', new_image+'.txt', top, top+'.txt', bottom, bottom+'.txt'])
+            if image.endswith('.eps'):
+                call(['rm', image, new_image+'.txt', top, top+'.txt', bottom, bottom+'.txt'])
+            else:
+                call(['rm', new_image+'.txt', top, top+'.txt', bottom, bottom+'.txt'])
         else:
             output += 'warning: ' + image + ' does not exist\n'
 
