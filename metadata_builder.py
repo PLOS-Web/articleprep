@@ -95,8 +95,10 @@ def add_editors(root, editors, affs):
     i = 1
     for editor in editors:
         contrib_group.append(editor)
+        editor.xpath("role")[0].text = 'Editor'
+        editor.remove(editor.xpath("email")[0])
         rid = editor.xpath("xref[@ref-type='aff']")[0].attrib['rid']
-        institution = affs[rid].xpath("institution")[0].text
+        institution = affs[rid].xpath("institution")[0].text.strip()
         country = affs[rid].xpath("country")[0].text.title().replace('United States', 'United States of America')
         aff = etree.fromstring("<aff id='edit"+str(i)+"'><addr-line>"+institution+', '+country+"</addr-line></aff>")
         article_meta.insert(previous + i, aff)
