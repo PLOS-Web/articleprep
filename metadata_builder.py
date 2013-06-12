@@ -79,6 +79,33 @@ def add_alt_title(root, alt_title):
     return root
 constructors.append([add_alt_title, [get_alt_title]])    
 
+def get_editors(m):
+    return m.xpath("//contrib[@contrib-type='editor']")
+
+def get_affs(m):
+    affs = {}
+    for aff in m.xpath("//aff"):
+        affs[aff.attrib['id']] = aff
+    return affs
+
+def add_editors(root, editors, affs):
+    article_meta = root.xpath("//article-meta")[0]
+    previous = article_meta.index(article_meta.xpath("aff")[-1])
+    contrib_group = etree.Element('contrib-group')
+    i = 1
+    for editor in editors:
+        contrib_group.append(editor)
+        rid = editor.xpath("xref[@ref-type='aff']")[0].attrib['rid']
+        institution = affs[rid].xpath("institution")[0].text
+        country = affs[rid].xpath("country")[0].text.title().replace('United States', 'United States of America')
+        aff = etree.fromstring("<aff id='edit"+str(i)+"'><addr-line>"+institution+', '+country+"</addr-line></aff>")
+        article_meta.insert(previous + i, aff)
+        editor.xpath("xref[@ref-type='aff']")[0].attrib['rid'] = "edit"+str(i)
+        i += 1
+    article_meta.insert(previous + 1, contrib_group)
+    return root
+constructors.append([add_editors, [get_editors, get_affs]]) 
+
 def get_conflict(m):
     return m.xpath("//meta-name[contains(text(),'Competing Interest')]")[0].getnext().text
 
