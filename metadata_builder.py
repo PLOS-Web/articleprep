@@ -97,6 +97,7 @@ def add_editors(root, editors, affs):
         contrib_group.append(editor)
         editor.xpath("role")[0].text = 'Editor'
         editor.remove(editor.xpath("email")[0])
+        editor.remove(editor.xpath("degrees")[0])
         rid = editor.xpath("xref[@ref-type='aff']")[0].attrib['rid']
         institution = affs[rid].xpath("institution")[0].text.strip()
         country = affs[rid].xpath("country")[0].text.title().replace('United States', 'United States of America')
