@@ -8,6 +8,7 @@ import copy
 import mimetypes
 import lxml.etree as etree
 import logging
+import traceback
 
 import config
 
@@ -308,8 +309,10 @@ if __name__ == '__main__':
         logger.critical(ee) 
         sys.exit(1)
     for constructor, subfunctions in constructors:
-        try: root = constructor(root, *map(lambda x: x(m), subfunctions))
-        except Exception as ee: logger.error('error in ' + constructor.__name__ + ': ' + type(ee).__name__ + ': ' + str(ee))
+        try:
+            root = constructor(root, *map(lambda x: x(m), subfunctions))
+        except Exception as ee: 
+            logger.exception(ee)
     e.write(sys.argv[3], xml_declaration = True, encoding = 'UTF-8')
     logger.info("METADATA_BUILDER EXITING")
     print 'done'
