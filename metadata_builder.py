@@ -7,6 +7,11 @@ import time
 import copy
 import mimetypes
 import lxml.etree as etree
+import logging
+
+import config
+
+base_logger = logging.getLogger('metadata_builder')
 
 constructors = []
 
@@ -275,7 +280,7 @@ def fix_si(root, doi, exts):
         ext = exts.get(si.xpath("label")[0].text, '')
         si.attrib["{http://www.w3.org/1999/xlink}href"] = si_doi + ext
         try: si.attrib['mimetype'] = mimetypes.guess_type('x' + ext, False)[0]
-        except Exception as ee: log.write('** error getting mimetype for ' + si_doi + ext + ': ' + str(ee) + '\n')
+        except Exception as ee: logger.error('error getting mimetype for ' + si_doi + ext + ': ' + str(ee))
         si.xpath("caption")[0].append(etree.fromstring('<p>('+ext.replace('.','').upper()+')</p>'))
         # remove graphic children if they exist
         for graphic in si.xpath("graphic"):
@@ -287,20 +292,22 @@ constructors.append([fix_si, [get_article_doi, get_si_ext]])
 if __name__ == '__main__':
     if len(sys.argv) != 4:
         sys.exit('usage: metadata_builder.py metadata.xml before.xml after.xml')
-    log = open('/var/local/scripts/production/articleprep/log/metadata_log', 'a')
-    log.write('-' * 80 + '\n' + time.strftime("%Y-%m-%d %H:%M:%S") + '  ' + ' '.join(sys.argv[1:]) + '\n')
+    logger = logging.LoggerAdapter(base_logger,
+                                   {'meta': sys.argv[1],
+                                    'before': sys.argv[2],
+                                    'after': sys.argv[3]})
+    logger.info("STARTING METADATA_BUILDER . . .")
     try:
         parser = etree.XMLParser(recover = True, remove_comments = True)
         m = etree.parse(sys.argv[1], parser).getroot()
         e = etree.parse(sys.argv[2], parser)
         root = e.getroot()
     except Exception as ee:
-        log.write('** error parsing: ' + str(ee) + '\n')
-        log.close()
-        raise
+        logger.critical(ee) 
+        sys.exit(1)
     for constructor, subfunctions in constructors:
         try: root = constructor(root, *map(lambda x: x(m), subfunctions))
-        except Exception as ee: log.write('** error in ' + constructor.__name__ + ': ' + str(ee) + '\n')
+        except Exception as ee: logger.error('error in ' + constructor.__name__ + ': ' + str(ee))
     e.write(sys.argv[3], xml_declaration = True, encoding = 'UTF-8')
-    log.close()
+    logger.info("METADATA_BUILDER EXITING")
     print 'done'
