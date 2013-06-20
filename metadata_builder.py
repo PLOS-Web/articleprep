@@ -265,7 +265,7 @@ def get_si_ext(m):
     exts = {}
     for si in m.xpath("//supplementary-material"):
         filename = si.attrib['{http://www.w3.org/1999/xlink}href']
-        exts[si.xpath("label")[0].text] = filename[filename.rfind('.'):]
+        exts[si.xpath("label")[0].text.strip()] = filename[filename.rfind('.'):]
     return exts
 
 def fix_si(root, doi, exts):
@@ -277,9 +277,11 @@ def fix_si(root, doi, exts):
             if xref.attrib['rid'] == si.attrib['id']:
                 xref.attrib['rid'] = si_doi
         si.attrib['id'] = si_doi
-        ext = exts.get(si.xpath("label")[0].text, '')
+        ext = exts.get(si.xpath("label")[0].text.strip(), '')
         si.attrib["{http://www.w3.org/1999/xlink}href"] = si_doi + ext
-        try: si.attrib['mimetype'] = mimetypes.guess_type('x' + ext, False)[0]
+        try:
+            si.attrib['mimetype'] = mimetypes.guess_type('x' + ext, False)[0]
+            logger.debug("Found mimetype for \"%s\": %s" % (ext, si.attrib['mimetype']))
         except Exception as ee: logger.error('error getting mimetype for ' + si_doi + ext + ': ' + str(ee))
         si.xpath("caption")[0].append(etree.fromstring('<p>('+ext.replace('.','').upper()+')</p>'))
         # remove graphic children if they exist
@@ -307,7 +309,7 @@ if __name__ == '__main__':
         sys.exit(1)
     for constructor, subfunctions in constructors:
         try: root = constructor(root, *map(lambda x: x(m), subfunctions))
-        except Exception as ee: logger.error('error in ' + constructor.__name__ + ': ' + str(ee))
+        except Exception as ee: logger.error('error in ' + constructor.__name__ + ': ' + type(ee).__name__ + ': ' + str(ee))
     e.write(sys.argv[3], xml_declaration = True, encoding = 'UTF-8')
     logger.info("METADATA_BUILDER EXITING")
     print 'done'
