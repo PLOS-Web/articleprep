@@ -26,6 +26,6 @@ metadata_file.setFormatter(verbose_metadatabuilder_formatter)
 # loggers
 l = logging.getLogger('metadata_builder')
 l.setLevel(logging.DEBUG)
-l.addHandler(console_metadatabuilder_debug)
+l.addHandler(console_metadatabuilder_production)
 l.addHandler(metadata_file)
 
