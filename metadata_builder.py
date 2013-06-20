@@ -102,8 +102,15 @@ def add_editors(root, editors, affs):
     for editor in editors:
         contrib_group.append(editor)
         editor.xpath("role")[0].text = 'Editor'
-        editor.remove(editor.xpath("email")[0])
-        editor.remove(editor.xpath("degrees")[0])
+        try:
+            editor.remove(editor.xpath("email")[0])        
+        except IndexError, ee:
+            logger.debug("editor, %s,  has no email to remove" % editor.xpath("name/surname")[0].text)
+        try:
+            editor.remove(editor.xpath("degrees")[0])
+        except IndexError, ee:
+            logger.debug("editor, %s,  has no degree to remove :(" % editor.xpath("name/surname")[0].text)
+
         rid = editor.xpath("xref[@ref-type='aff']")[0].attrib['rid']
         institution = affs[rid].xpath("institution")[0].text.strip()
         country = affs[rid].xpath("country")[0].text.title().replace('United States', 'United States of America')
