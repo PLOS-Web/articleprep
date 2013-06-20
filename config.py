@@ -36,7 +36,7 @@ LOGGING = {
     },
     'loggers': {
         'metadata_builder': {
-            'handlers':['console-metadatabuilder-debug', 'metadata-file'],
+            'handlers':['console-metadatabuilder-production', 'metadata-file'],
             'propagate': True,
             'level':'DEBUG',
         },

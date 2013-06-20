@@ -322,4 +322,3 @@ if __name__ == '__main__':
             logger.exception(ee)
     e.write(sys.argv[3], xml_declaration = True, encoding = 'UTF-8')
     logger.info("METADATA_BUILDER EXITING")
-    print 'done'
