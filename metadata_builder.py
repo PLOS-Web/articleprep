@@ -224,7 +224,7 @@ def get_copyright_statement(m):
     if s.startswith('No'):
         return 'This is an open-access article distributed under the terms of the Creative Commons Attribution License, which permits unrestricted use, distribution, and reproduction in any medium, provided the original author and source are credited.'
     if s.startswith('Yes'):
-        return 'This is an open-access article distributed under the terms of the Creative Commons Public Domain declaration which stipulates that, once placed in the public domain, this work may be freely reproduced, distributed, transmitted, modified, built upon, or otherwise used by anyone for any lawful purpose.'
+        return 'This is an open-access article, free of all copyright, and may be freely reproduced, distributed, transmitted, modified, built upon, or otherwise used by anyone for any lawful purpose. The work is made available under the Creative Commons CC0 public domain dedication.'
 
 def add_permissions(root, pubdate, holder, statement):
     article_meta = root.xpath("//article-meta")[0]
