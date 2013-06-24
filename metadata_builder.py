@@ -18,6 +18,11 @@ def remove_possible_node(parent, child):
     for node in parent.xpath(child):
         parent.remove(node)
 
+def strip_zeros(date):
+    for field in ['month','day']:
+        date.xpath(field)[0].text = str(int(date.xpath(field)[0].text))
+    return date
+
 def get_journal(m):
     return m.xpath("//journal-id[@journal-id-type='publisher']")[0].text
 
@@ -154,7 +159,7 @@ def add_collection(root, collection):
 constructors.append([add_collection, [get_collection]])
 
 def get_pubdate(m):
-    return copy.deepcopy(m.xpath("//pub-date[@pub-type='epub']")[0])
+    return strip_zeros(copy.deepcopy(m.xpath("//pub-date[@pub-type='epub']")[0]))
 
 def add_pubdate(root, date):
     article_meta = root.xpath("//article-meta")[0]
@@ -193,10 +198,10 @@ def add_elocation(root, doi):
 constructors.append([add_elocation, [get_article_doi]])
 
 def get_received_date(m):
-    return m.xpath("//date[@date-type='received']")[0]
+    return strip_zeros(m.xpath("//date[@date-type='received']")[0])
 
 def get_accepted_date(m):
-    return m.xpath("//date[@date-type='accepted']")[0]
+    return strip_zeros(m.xpath("//date[@date-type='accepted']")[0])
 
 def add_history(root, received, accepted):
     article_meta = root.xpath("//article-meta")[0]
