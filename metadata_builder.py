@@ -280,9 +280,7 @@ def fix_si(root, doi, exts):
         si.attrib['id'] = si_doi
         ext = exts.get(si.xpath("label")[0].text.strip(), '')
         si.attrib["{http://www.w3.org/1999/xlink}href"] = si_doi + ext
-        try:
-            si.attrib['mimetype'] = mimetypes.guess_type('x' + ext, False)[0]
-            logger.debug("Found mimetype for \"%s\": %s" % (ext, si.attrib['mimetype']))
+        try: si.attrib['mimetype'] = mimetypes.guess_type('x' + ext, False)[0]
         except Exception as ee: logger.error('error getting mimetype for ' + si_doi + ext + ': ' + str(ee))
         si.xpath("caption")[0].append(etree.fromstring('<p>('+ext.replace('.','').upper()+')</p>'))
         # remove graphic children if they exist
@@ -295,10 +293,7 @@ constructors.append([fix_si, [get_article_doi, get_si_ext]])
 if __name__ == '__main__':
     if len(sys.argv) != 4:
         sys.exit('usage: metadata_builder.py metadata.xml before.xml after.xml')
-    logger = logging.LoggerAdapter(base_logger,
-                                   {'meta': sys.argv[1],
-                                    'before': sys.argv[2],
-                                    'after': sys.argv[3]})
+    logger = logging.LoggerAdapter(base_logger, {'meta': sys.argv[1], 'before': sys.argv[2], 'after': sys.argv[3]})
     logger.info("STARTING METADATA_BUILDER . . .")
     try:
         parser = etree.XMLParser(recover = True, remove_comments = True)

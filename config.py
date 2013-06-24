@@ -2,7 +2,7 @@ import logging
 import os
 
 # log file location (relative path)
-LOGGING_BASE_DIR = os.path.abspath('logs')
+LOGGING_BASE_DIR = os.path.abspath('/var/local/scripts/production/articleprep/log')
 if not os.path.exists(LOGGING_BASE_DIR):
     os.makedirs(LOGGING_BASE_DIR)
 
