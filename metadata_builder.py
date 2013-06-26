@@ -23,6 +23,11 @@ def strip_zeros(date):
         date.xpath(field)[0].text = str(int(date.xpath(field)[0].text))
     return date
 
+def activate_links(text):
+    text = re.sub(r'\b(https?[^ ),]*\w)', r'<ext-link ext-link-type="uri" xlink:href="\1">\1</ext-link>', text)
+    text = re.sub(r'\b(www[^ ),]*\w)', r'<ext-link ext-link-type="uri" xlink:href="http://\1">\1</ext-link>', text)
+    return text
+
 def get_journal(m):
     return m.xpath("//journal-id[@journal-id-type='publisher']")[0].text
 
@@ -235,12 +240,13 @@ def add_permissions(root, pubdate, holder, statement):
 constructors.append([add_permissions, [get_pubdate, get_copyright_holder, get_copyright_statement]])
 
 def get_funding_statement(m):
-    return m.xpath("//meta-name[contains(text(),'Financial Disclosure')]")[0].getnext().text
+    return activate_links(m.xpath("//meta-name[contains(text(),'Financial Disclosure')]")[0].getnext().text)
 
 def add_funding(root, statement):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "funding-group")
-    article_meta.append(etree.fromstring("""<funding-group><funding-statement>%s</funding-statement></funding-group>""" % statement))
+    article_meta.append(etree.fromstring("""<funding-group xmlns:xlink="http://www.w3.org/1999/xlink">
+        <funding-statement>%s</funding-statement></funding-group>""" % statement))
     return root
 constructors.append([add_funding, [get_funding_statement]])
 
