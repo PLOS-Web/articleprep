@@ -290,7 +290,7 @@ def fix_si(root, doi, exts):
                 xref.attrib['rid'] = si_doi
         si.attrib['id'] = si_doi
         ext = exts.get(si.xpath("label")[0].text.strip(), '')
-        si.attrib["{http://www.w3.org/1999/xlink}href"] = si_doi + ext
+        si.attrib["{http://www.w3.org/1999/xlink}href"] = si_doi + ext.lower()
         try: si.attrib['mimetype'] = mimetypes.guess_type('x' + ext, False)[0]
         except Exception as ee: logger.error('error getting mimetype for ' + si_doi + ext + ': ' + str(ee))
         si.xpath("caption")[0].append(etree.fromstring('<p>('+ext.replace('.','').upper()+')</p>'))
