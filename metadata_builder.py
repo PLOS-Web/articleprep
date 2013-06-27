@@ -24,9 +24,7 @@ def strip_zeros(date):
     return date
 
 def activate_links(text):
-    text = re.sub(r'\b(https?[^ ),]*\w)', r'<ext-link ext-link-type="uri" xlink:href="\1">\1</ext-link>', text)
-    text = re.sub(r'\b(www[^ ),]*\w)', r'<ext-link ext-link-type="uri" xlink:href="http://\1">\1</ext-link>', text)
-    return text
+    return re.sub(r'\b((https?|www)[^ ),]*\w)', r'<ext-link ext-link-type="uri" xlink:href="\1">\1</ext-link>', text)
 
 def get_journal(m):
     return m.xpath("//journal-id[@journal-id-type='publisher']")[0].text
