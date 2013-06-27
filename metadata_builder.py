@@ -116,7 +116,7 @@ def add_editors(root, editors, affs):
         rid = editor.xpath("xref[@ref-type='aff']")[0].attrib['rid']
         institution = affs[rid].xpath("institution")[0].text.strip()
         country = affs[rid].xpath("country")[0].text.title().replace('United States', 'United States of America')
-        aff = etree.fromstring("<aff id='edit"+str(i)+"'><addr-line>"+institution+', '+country+"</addr-line></aff>")
+        aff = html.fromstring("<aff id='edit"+str(i)+"'><addr-line>"+institution+', '+country+"</addr-line></aff>")
         article_meta.insert(previous + i, aff)
         editor.xpath("xref[@ref-type='aff']")[0].attrib['rid'] = "edit"+str(i)
         i += 1
@@ -130,7 +130,7 @@ def get_conflict(m):
 def add_conflict(root, conflict):
     author_notes = root.xpath("//author-notes")[0]
     remove_possible_node(author_notes, "fn[@fn-type='conflict']")
-    author_notes.insert(1, etree.fromstring("""<fn fn-type="conflict"><p>%s</p></fn>""" % conflict))
+    author_notes.insert(1, html.fromstring("""<fn fn-type="conflict"><p>%s</p></fn>""" % conflict))
     return root
 constructors.append([add_conflict, [get_conflict]])
 
