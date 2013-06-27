@@ -7,6 +7,7 @@ import time
 import copy
 import mimetypes
 import lxml.etree as etree
+import lxml.html as html
 import logging
 import traceback
 import config
@@ -243,7 +244,7 @@ def get_funding_statement(m):
 def add_funding(root, statement):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "funding-group")
-    article_meta.append(etree.fromstring("""<funding-group xmlns:xlink="http://www.w3.org/1999/xlink">
+    article_meta.append(html.fromstring("""<funding-group xmlns:xlink="http://www.w3.org/1999/xlink">
         <funding-statement>%s</funding-statement></funding-group>""" % statement))
     return root
 constructors.append([add_funding, [get_funding_statement]])
