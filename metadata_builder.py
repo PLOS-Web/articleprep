@@ -137,8 +137,8 @@ constructors.append([add_conflict, [get_conflict]])
 def get_contrib(m):
     result = ''
     for au in m.xpath("//meta-name[contains(text(),'Author Contributions')]"):
-        result += re.sub(r'.*Author Contributions: ([^<]*).*', r'\1', au.text.replace('\n','')).capitalize() + ': ' + au.getnext().text + '. '
-    return result
+        result += re.sub(r'.*Author Contributions: ([^<]*).*', r'\1', au.text.replace('\n','')).capitalize() + ': ' + au.getnext().text.strip() + '. '
+    return result.replace('Other: ', '')
 
 def add_contrib(root, contrib):
     author_notes = root.xpath("//author-notes")[0]
