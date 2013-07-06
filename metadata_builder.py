@@ -275,14 +275,14 @@ def get_si_ext(m):
     exts = {}
     for si in m.xpath("//supplementary-material"):
         filename = si.attrib['{http://www.w3.org/1999/xlink}href']
-        exts[si.xpath("label")[0].text.strip()] = filename[filename.rfind('.'):]
+        name = si.xpath("label")[0].text.strip() if si.xpath("label") else filename[:filename.index('.')]
+        exts[name] = filename[filename.rfind('.'):]
     return exts
 
 def fix_si(root, doi, exts):
     i = 1
     for si in root.xpath("//supplementary-material"):
         si_doi = doi[-12:] + ".s" +str(i).zfill(3)
-        si_id = re.sub('\.', '-', si_doi)
         for xref in root.xpath("//xref[@ref-type='supplementary-material']"):
             if xref.attrib['rid'] == si.attrib['id']:
                 xref.attrib['rid'] = si_doi
