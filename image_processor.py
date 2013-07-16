@@ -31,7 +31,7 @@ def grep(image, new_image, top, bottom):
     global output
     label = call("grep -iE (fig|table)".split() + [new_image+".txt", top+".txt", bottom+".txt"]).split('\n')[0]
     if label != '':
-        output += "warning: "+label[:label.index(':')].replace('.txt','')+" contains label "+label[label.index(':')+1:]+'\n'
+        output += "error: "+label[label.rfind('/')+1:label.index(':')].replace('.txt','')+" contains label "+label[label.index(':')+1:]+'\n'
 
 def prepare(images):
     global output
