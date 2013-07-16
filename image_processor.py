@@ -49,8 +49,6 @@ def prepare(images):
                 call(['rm', image, new_image+'.txt', top, top+'.txt', bottom, bottom+'.txt'])
             else:
                 call(['rm', new_image+'.txt', top, top+'.txt', bottom, bottom+'.txt'])
-        else:
-            output += 'warning: ' + image + ' does not exist\n'
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
