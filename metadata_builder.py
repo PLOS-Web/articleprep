@@ -305,7 +305,7 @@ if __name__ == '__main__':
     logger = logging.LoggerAdapter(base_logger, {'meta': sys.argv[1], 'before': sys.argv[2], 'after': sys.argv[3]})
     logger.info("STARTING METADATA_BUILDER . . .")
     try:
-        parser = etree.XMLParser(remove_comments = True)
+        parser = etree.XMLParser(recover = True, remove_comments = True)
         m = etree.parse(sys.argv[1]).getroot()
         e = etree.parse(sys.argv[2], parser)
         root = e.getroot()
