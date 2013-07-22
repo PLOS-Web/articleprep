@@ -257,6 +257,16 @@ def strip_body_si(root):
 constructors.append([strip_body_si, []])
 
 def fix_figures(root, doi):
+    # first fix multiple rids
+    for xref in root.xpath("//xref[@ref-type='fig']"):
+        rids = xref.attrib['rid'].split()
+        if len(rids) > 1:
+            xref_num = re.sub(r'\D*(\d+)\D*', r'\1', xref.text)
+            for rid in rids:
+                rid_num = re.sub(r'\D*(\d+)\D*', r'\1', rid)
+                if xref_num == rid_num:
+                    xref.attrib['rid'] = rid
+    # main fix figures
     i = 1
     for fig in root.xpath("//fig"):
         fig_doi = doi[-12:] + ".g" + str(i).zfill(3)
