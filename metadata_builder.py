@@ -218,7 +218,11 @@ def add_history(root, received, accepted):
 constructors.append([add_history, [get_received_date, get_accepted_date]])
 
 def get_copyright_holder(m):
-    return m.xpath("//contrib[@contrib-type='author']/role[@content-type='1']")[0].getnext().xpath('surname')[0].text + ' et al'
+    s = m.xpath("//meta-name[contains(text(),'Government Employee')]")[0].getnext().text
+    if s.startswith('No'):
+        return '<copyright-holder>'+m.xpath("//contrib[@contrib-type='author']/role[@content-type='1']")[0].getnext().xpath('surname')[0].text+' et al</copyright-holder>'
+    else:
+        return ''
 
 def get_copyright_statement(m):
     s = m.xpath("//meta-name[contains(text(),'Government Employee')]")[0].getnext().text
@@ -232,7 +236,7 @@ def add_permissions(root, pubdate, holder, statement):
     remove_possible_node(article_meta, "permissions")
     year = pubdate.xpath("year")[0].text
     article_meta.insert(get_author_notes_index(root) + 7, etree.fromstring("""<permissions xmlns:xlink="http://www.w3.org/1999/xlink">
-    <copyright-year>%s</copyright-year><copyright-holder>%s</copyright-holder><license xlink:type="simple"><license-p>%s</license-p></license>
+    <copyright-year>%s</copyright-year>%s<license xlink:type="simple"><license-p>%s</license-p></license>
     </permissions>""" % (year, holder, statement)))
     return root
 constructors.append([add_permissions, [get_pubdate, get_copyright_holder, get_copyright_statement]])
