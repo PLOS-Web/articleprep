@@ -218,8 +218,7 @@ def add_history(root, received, accepted):
 constructors.append([add_history, [get_received_date, get_accepted_date]])
 
 def get_copyright_holder(m):
-    min_role = min([role.attrib['content-type'] for role in m.xpath("//contrib[@contrib-type='author']/role")])
-    return m.xpath("//contrib[@contrib-type='author']/role[@content-type="+min_role+"]")[0].getnext().xpath('surname')[0].text + ' et al'
+    return m.xpath("//contrib[@contrib-type='author']/role[@content-type='1']")[0].getnext().xpath('surname')[0].text + ' et al'
 
 def get_copyright_statement(m):
     s = m.xpath("//meta-name[contains(text(),'Government Employee')]")[0].getnext().text
