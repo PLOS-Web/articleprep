@@ -7,7 +7,7 @@ if not os.path.exists(LOGGING_BASE_DIR):
     os.makedirs(LOGGING_BASE_DIR)
 
 # formatters
-verbose_metadatabuilder_formatter = logging.Formatter('%(asctime)-15s %(name)-10s %(levelname)-8s argv:{meta: %(meta)s, before: %(before)s, after: %(after)s} %(funcName)s:%(lineno)s | %(message)s')
+verbose_metadatabuilder_formatter = logging.Formatter('%(asctime)s %(levelname)-5s %(meta)s %(funcName)s:%(lineno)s | %(message)s')
 
 # handlers
 console_metadatabuilder_debug = logging.StreamHandler()
