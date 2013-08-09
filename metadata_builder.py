@@ -153,44 +153,60 @@ def get_author_notes_index(root):
     return am.index(author_notes)
 
 def get_collection(m):
-    return str(int(m.xpath("//pub-date[@pub-type='epub']/year")[0].text))
+    if m.xpath("//pub-date[@pub-type='epub']/year"):
+        return str(int(m.xpath("//pub-date[@pub-type='epub']/year")[0].text))
 
 def add_collection(root, collection):
-    article_meta = root.xpath("//article-meta")[0]
-    remove_possible_node(article_meta, "pub-date[@pub-type='collection']")
-    article_meta.insert(get_author_notes_index(root) + 1, etree.fromstring("<pub-date pub-type='collection'><year>%s</year></pub-date>" % collection))
+    if collection is None:
+        logger.error("no pubdate year in .meta")
+    else:
+        article_meta = root.xpath("//article-meta")[0]
+        remove_possible_node(article_meta, "pub-date[@pub-type='collection']")
+        article_meta.insert(get_author_notes_index(root) + 1, etree.fromstring("<pub-date pub-type='collection'><year>%s</year></pub-date>" % collection))
     return root
 constructors.append([add_collection, [get_collection]])
 
 def get_pubdate(m):
-    return strip_zeros(copy.deepcopy(m.xpath("//pub-date[@pub-type='epub']")[0]))
+    if m.xpath("//pub-date[@pub-type='epub']"):
+        return strip_zeros(copy.deepcopy(m.xpath("//pub-date[@pub-type='epub']")[0]))
 
 def add_pubdate(root, date):
-    article_meta = root.xpath("//article-meta")[0]
-    remove_possible_node(article_meta, "pub-date[@pub-type='epub']")
-    article_meta.insert(get_author_notes_index(root) + 2, date)
+    if date is None:
+        logger.error("no pubdate in .meta")
+    else:
+        article_meta = root.xpath("//article-meta")[0]
+        remove_possible_node(article_meta, "pub-date[@pub-type='epub']")
+        article_meta.insert(get_author_notes_index(root) + 2, date)
     return root
 constructors.append([add_pubdate, [get_pubdate]])
 
 def get_volume(m):
-    volumes = {'pbiology':2002, 'pmedicine':2003, 'pcompbiol':2004, 'pgenetics':2004, 'ppathogens':2004, 'pone':2005, 'pntd':2006}
-    year = m.xpath("//pub-date[@pub-type='epub']/year")[0].text
-    return str(int(year) - volumes[get_journal(m)])
+    if m.xpath("//pub-date[@pub-type='epub']/year"):
+        volumes = {'pbiology':2002, 'pmedicine':2003, 'pcompbiol':2004, 'pgenetics':2004, 'ppathogens':2004, 'pone':2005, 'pntd':2006}
+        year = m.xpath("//pub-date[@pub-type='epub']/year")[0].text
+        return str(int(year) - volumes[get_journal(m)])
 
 def add_volume(root, volume):
-    article_meta = root.xpath("//article-meta")[0]
-    remove_possible_node(article_meta, "volume")
-    article_meta.insert(get_author_notes_index(root) + 3, etree.fromstring("""<volume>%s</volume>""" % volume))
+    if volume is None:
+        logger.error("no pubdate year in .meta")
+    else:
+        article_meta = root.xpath("//article-meta")[0]
+        remove_possible_node(article_meta, "volume")
+        article_meta.insert(get_author_notes_index(root) + 3, etree.fromstring("""<volume>%s</volume>""" % volume))
     return root
 constructors.append([add_volume, [get_volume]])
 
 def get_issue(m):
-    return str(int(m.xpath("//pub-date[@pub-type='epub']/month")[0].text))
+    if m.xpath("//pub-date[@pub-type='epub']/month"):
+        return str(int(m.xpath("//pub-date[@pub-type='epub']/month")[0].text))
 
 def add_issue(root, issue):
-    article_meta = root.xpath("//article-meta")[0]
-    remove_possible_node(article_meta, "issue")
-    article_meta.insert(get_author_notes_index(root) + 4, etree.fromstring("""<issue>%s</issue>""" % issue))
+    if issue is None:
+        logger.error("no pubdate month in .meta")
+    else:
+        article_meta = root.xpath("//article-meta")[0]
+        remove_possible_node(article_meta, "issue")
+        article_meta.insert(get_author_notes_index(root) + 4, etree.fromstring("""<issue>%s</issue>""" % issue))
     return root
 constructors.append([add_issue, [get_issue]])
 
@@ -234,6 +250,8 @@ def get_copyright_statement(m):
 def add_permissions(root, pubdate, holder, statement):
     if holder is None:
         logger.error("no author with role content-type='1'")
+    elif pubdate is None:
+        logger.error("no pubdate in .meta")
     else:
         article_meta = root.xpath("//article-meta")[0]
         remove_possible_node(article_meta, "permissions")
