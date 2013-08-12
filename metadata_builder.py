@@ -336,7 +336,7 @@ constructors.append([fix_si, [get_article_doi, get_si_ext]])
 if __name__ == '__main__':
     if len(sys.argv) != 4:
         sys.exit('usage: metadata_builder.py metadata.xml before.xml after.xml')
-    logger = logging.LoggerAdapter(base_logger, {'meta': sys.argv[1]})
+    logger = logging.LoggerAdapter(base_logger, {'before': sys.argv[2]})
     logger.info("metadata builder starting")
     try:
         parser = etree.XMLParser(recover = True, remove_comments = True)
