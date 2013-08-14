@@ -13,7 +13,7 @@ import traceback
 import config
 
 base_logger = logging.getLogger('metadata_builder')
-constructors = []
+adders = []  # functions that add metadata to article xml
 
 def remove_possible_node(parent, child):
     for node in parent.xpath(child):
@@ -49,7 +49,7 @@ def add_journal_meta(root, journal, issn):
     <publisher-loc>San Francisco, USA</publisher-loc></publisher>
     </journal-meta>""" % (j[journal][0], j[journal][1], j[journal][0], issn)))
     return root
-constructors.append([add_journal_meta, [get_journal, get_issn]])
+adders.append([add_journal_meta, [get_journal, get_issn]])
 
 def get_ms_number(m):
     return m.xpath("//article-id[@pub-id-type='manuscript']")[0].text
@@ -59,7 +59,7 @@ def add_ms_number(root, ms):
     remove_possible_node(article_meta, "article-id[@pub-id-type='publisher-id']")
     article_meta.insert(0, etree.fromstring("""<article-id pub-id-type='publisher-id'>%s</article-id>""" % ms))
     return root
-constructors.append([add_ms_number, [get_ms_number]])
+adders.append([add_ms_number, [get_ms_number]])
 
 def get_article_doi(m):
     return m.xpath("//article-id[@pub-id-type='doi']")[0].text
@@ -69,7 +69,7 @@ def add_article_doi(root, doi):
     remove_possible_node(article_meta, "article-id[@pub-id-type='doi']")
     article_meta.insert(1, etree.fromstring("""<article-id pub-id-type="doi">%s</article-id>""" % doi))
     return root
-constructors.append([add_article_doi, [get_article_doi]])
+adders.append([add_article_doi, [get_article_doi]])
 
 def get_article_type(m):
     return m.xpath("//article-categories//subj-group[@subj-group-type='Article Type']/subject")[0].text
@@ -80,7 +80,7 @@ def add_article_type(root, article_type):
     article_meta.insert(2, etree.fromstring("""<article-categories><subj-group subj-group-type="heading">
     <subject>%s</subject></subj-group></article-categories>""" % article_type))
     return root
-constructors.append([add_article_type, [get_article_type]])
+adders.append([add_article_type, [get_article_type]])
 
 def get_alt_title(m):
     return m.xpath("//alt-title[@alt-title-type='running-head']")[0]
@@ -90,7 +90,7 @@ def add_alt_title(root, alt_title):
     remove_possible_node(title_group, "alt-title[@alt-title-type='running-head']")
     title_group.insert(1, alt_title)
     return root
-constructors.append([add_alt_title, [get_alt_title]])    
+adders.append([add_alt_title, [get_alt_title]])    
 
 def get_editors(m):
     return m.xpath("//contrib[@contrib-type='editor']")
@@ -122,7 +122,7 @@ def add_editors(root, editors, affs):
         i += 1
     article_meta.insert(previous + 1, contrib_group)
     return root
-constructors.append([add_editors, [get_editors, get_affs]]) 
+adders.append([add_editors, [get_editors, get_affs]]) 
 
 def get_conflict(m):
     return m.xpath("//meta-name[contains(text(),'Competing Interest')]")[0].getnext().text
@@ -132,7 +132,7 @@ def add_conflict(root, conflict):
     remove_possible_node(author_notes, "fn[@fn-type='conflict']")
     author_notes.insert(1, html.fromstring("""<fn fn-type="conflict"><p>%s</p></fn>""" % conflict))
     return root
-constructors.append([add_conflict, [get_conflict]])
+adders.append([add_conflict, [get_conflict]])
 
 def get_contrib(m):
     result = ''
@@ -145,7 +145,7 @@ def add_contrib(root, contrib):
     remove_possible_node(author_notes, "fn[@fn-type='con']")
     author_notes.insert(2, etree.fromstring("""<fn fn-type="con"><p>%s</p></fn>""" % contrib))
     return root
-constructors.append([add_contrib, [get_contrib]])
+adders.append([add_contrib, [get_contrib]])
 
 def get_author_notes_index(root):
     am = root.xpath("//article-meta")[0]
@@ -160,7 +160,7 @@ def add_collection(root, collection):
     remove_possible_node(article_meta, "pub-date[@pub-type='collection']")
     article_meta.insert(get_author_notes_index(root) + 1, etree.fromstring("<pub-date pub-type='collection'><year>%s</year></pub-date>" % collection))
     return root
-constructors.append([add_collection, [get_collection]])
+adders.append([add_collection, [get_collection]])
 
 def get_pubdate(m):
     return strip_zeros(copy.deepcopy(m.xpath("//pub-date[@pub-type='epub']")[0]))
@@ -170,7 +170,7 @@ def add_pubdate(root, date):
     remove_possible_node(article_meta, "pub-date[@pub-type='epub']")
     article_meta.insert(get_author_notes_index(root) + 2, date)
     return root
-constructors.append([add_pubdate, [get_pubdate]])
+adders.append([add_pubdate, [get_pubdate]])
 
 def get_volume(m):
     volumes = {'pbiology':2002, 'pmedicine':2003, 'pcompbiol':2004, 'pgenetics':2004, 'ppathogens':2004, 'pone':2005, 'pntd':2006}
@@ -182,7 +182,7 @@ def add_volume(root, volume):
     remove_possible_node(article_meta, "volume")
     article_meta.insert(get_author_notes_index(root) + 3, etree.fromstring("""<volume>%s</volume>""" % volume))
     return root
-constructors.append([add_volume, [get_volume]])
+adders.append([add_volume, [get_volume]])
 
 def get_issue(m):
     return str(int(m.xpath("//pub-date[@pub-type='epub']/month")[0].text))
@@ -192,14 +192,14 @@ def add_issue(root, issue):
     remove_possible_node(article_meta, "issue")
     article_meta.insert(get_author_notes_index(root) + 4, etree.fromstring("""<issue>%s</issue>""" % issue))
     return root
-constructors.append([add_issue, [get_issue]])
+adders.append([add_issue, [get_issue]])
 
 def add_elocation(root, doi):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "elocation-id")
     article_meta.insert(get_author_notes_index(root) + 5, etree.fromstring("""<elocation-id>e%s</elocation-id>""" % doi[-5:]))
     return root
-constructors.append([add_elocation, [get_article_doi]])
+adders.append([add_elocation, [get_article_doi]])
 
 def get_received_date(m):
     return strip_zeros(m.xpath("//date[@date-type='received']")[0])
@@ -215,7 +215,7 @@ def add_history(root, received, accepted):
     history.append(accepted)
     article_meta.insert(get_author_notes_index(root) + 6, history)
     return root
-constructors.append([add_history, [get_received_date, get_accepted_date]])
+adders.append([add_history, [get_received_date, get_accepted_date]])
 
 def get_copyright_holder(m):
     s = m.xpath("//meta-name[contains(text(),'Government Employee')]")[0].getnext().text
@@ -239,7 +239,7 @@ def add_permissions(root, pubdate, holder, statement):
     <copyright-year>%s</copyright-year>%s<license xlink:type="simple"><license-p>%s</license-p></license>
     </permissions>""" % (year, holder, statement)))
     return root
-constructors.append([add_permissions, [get_pubdate, get_copyright_holder, get_copyright_statement]])
+adders.append([add_permissions, [get_pubdate, get_copyright_holder, get_copyright_statement]])
 
 def get_funding_statement(m):
     return activate_links(m.xpath("//meta-name[contains(text(),'Financial Disclosure')]")[0].getnext().text)
@@ -249,7 +249,7 @@ def add_funding(root, statement):
     remove_possible_node(article_meta, "funding-group")
     article_meta.append(html.fromstring("""<funding-group"><funding-statement>%s</funding-statement></funding-group>""" % statement))
     return root
-constructors.append([add_funding, [get_funding_statement]])
+adders.append([add_funding, [get_funding_statement]])
 
 # remove SI in body if they exist
 def strip_body_si(root):
@@ -257,7 +257,7 @@ def strip_body_si(root):
         if re.search('figS[0-9]', fig.attrib['id']):
             fig.getparent().remove(fig)
     return root
-constructors.append([strip_body_si, []])
+adders.append([strip_body_si, []])
 
 def fix_figures(root, doi):
     # first fix multiple rids
@@ -282,7 +282,7 @@ def fix_figures(root, doi):
         fig.xpath("graphic")[0].attrib["{http://www.w3.org/1999/xlink}href"] = fig_doi + ".tif"
         i += 1
     return root
-constructors.append([fix_figures, [get_article_doi]])
+adders.append([fix_figures, [get_article_doi]])
 
 def get_si_ext(m):
     exts = {}
@@ -310,7 +310,7 @@ def fix_si(root, doi, exts):
             si.remove(graphic)
         i += 1
     return root
-constructors.append([fix_si, [get_article_doi, get_si_ext]])
+adders.append([fix_si, [get_article_doi, get_si_ext]])
 
 if __name__ == '__main__':
     if len(sys.argv) != 4:
@@ -326,9 +326,9 @@ if __name__ == '__main__':
         print 'error parsing: '+str(ee)+'\n'
         logger.critical(ee) 
         sys.exit(1)
-    for constructor, subfunctions in constructors:
+    for adder, subfunctions in adders:
         try:
-            root = constructor(root, *map(lambda x: x(m), subfunctions))
+            root = adder(root, *map(lambda x: x(m), subfunctions))
         except Exception as ee: 
             logger.exception(ee)
     e.write(sys.argv[3], xml_declaration = True, encoding = 'UTF-8')
