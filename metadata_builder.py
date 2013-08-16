@@ -165,6 +165,10 @@ def add_contrib(root, contrib, author_notes_index):
     return root
 adders.append([add_contrib, ['contrib', 'author_notes_index']])
 
+def get_pubdate(m):
+    return strip_zeros(copy.deepcopy(m.xpath("//pub-date[@pub-type='epub']")[0]))
+getters.append([get_pubdate, 'error: missing/incomplete pubdate - could not add pubdate, volume, issue, collection, copyright'])
+
 def add_collection(root, pubdate, author_notes_index):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "pub-date[@pub-type='collection']")
@@ -172,10 +176,6 @@ def add_collection(root, pubdate, author_notes_index):
     article_meta.insert(get_author_notes_index(root) + 1, etree.fromstring("<pub-date pub-type='collection'><year>%s</year></pub-date>" % year))
     return root
 adders.append([add_collection, ['pubdate', 'author_notes_index']])
-
-def get_pubdate(m):
-    return strip_zeros(copy.deepcopy(m.xpath("//pub-date[@pub-type='epub']")[0]))
-getters.append([get_pubdate, 'error: missing/incomplete pubdate - could not add pubdate, volume, issue, collection, copyright'])
 
 def add_pubdate(root, date, author_notes_index):
     article_meta = root.xpath("//article-meta")[0]
@@ -229,11 +229,11 @@ adders.append([add_history, ['received_date', 'accepted_date', 'author_notes_ind
 
 def get_copyright_holder(m):
     s = m.xpath("//meta-name[contains(text(),'Government Employee')]")[0].getnext().text
-    if s.startswith('No'):
-        return '<copyright-holder>'+m.xpath("//contrib[@contrib-type='author']/role[@content-type='1']")[0].getnext().xpath('surname')[0].text+' et al</copyright-holder>'
-    else:
+    if s.startswith('Yes'):
         return ''
-getters.append([get_copyright_holder])
+    else:
+        return '<copyright-holder>'+m.xpath("//contrib[@contrib-type='author']/role[@content-type='1']")[0].getnext().xpath('surname')[0].text+' et al</copyright-holder>'        
+getters.append([get_copyright_holder, 'error: no first author - could not add copyright'])
 
 def get_copyright_statement(m):
     s = m.xpath("//meta-name[contains(text(),'Government Employee')]")[0].getnext().text
