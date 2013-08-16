@@ -11,6 +11,7 @@ import lxml.html as html
 import traceback
 
 adders = []  # functions that add metadata to article xml
+getters = []  # functions that retrieve fields from metadata xml
 
 def remove_possible_node(parent, child):
     for node in parent.xpath(child):
@@ -26,9 +27,11 @@ def activate_links(text):
 
 def get_journal(m):
     return m.xpath("//journal-id[@journal-id-type='publisher']")[0].text
+getters.append([get_journal])
 
 def get_issn(m):
     return m.xpath("//issn[@pub-type='ppub']")[0].text
+getters.append([get_issn])
 
 def add_journal_meta(root, journal, issn):
     j = {'pbiology':['PLoS Biol','plosbiol'], 'pmedicine':['PLoS Med','plosmed'], 
@@ -46,30 +49,33 @@ def add_journal_meta(root, journal, issn):
     <publisher-loc>San Francisco, USA</publisher-loc></publisher>
     </journal-meta>""" % (j[journal][0], j[journal][1], j[journal][0], issn)))
     return root
-adders.append([add_journal_meta, [get_journal, get_issn]])
+adders.append([add_journal_meta, ['journal', 'issn']])
 
 def get_ms_number(m):
     return m.xpath("//article-id[@pub-id-type='manuscript']")[0].text
+getters.append([get_ms_number])
 
 def add_ms_number(root, ms):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "article-id[@pub-id-type='publisher-id']")
     article_meta.insert(0, etree.fromstring("""<article-id pub-id-type='publisher-id'>%s</article-id>""" % ms))
     return root
-adders.append([add_ms_number, [get_ms_number]])
+adders.append([add_ms_number, ['ms_number']])
 
 def get_article_doi(m):
     return m.xpath("//article-id[@pub-id-type='doi']")[0].text
+getters.append([get_article_doi])
 
 def add_article_doi(root, doi):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "article-id[@pub-id-type='doi']")
     article_meta.insert(1, etree.fromstring("""<article-id pub-id-type="doi">%s</article-id>""" % doi))
     return root
-adders.append([add_article_doi, [get_article_doi]])
+adders.append([add_article_doi, ['article_doi']])
 
 def get_article_type(m):
     return m.xpath("//article-categories//subj-group[@subj-group-type='Article Type']/subject")[0].text
+getters.append([get_article_type])
 
 def add_article_type(root, article_type):
     article_meta = root.xpath("//article-meta")[0]
@@ -77,26 +83,29 @@ def add_article_type(root, article_type):
     article_meta.insert(2, etree.fromstring("""<article-categories><subj-group subj-group-type="heading">
     <subject>%s</subject></subj-group></article-categories>""" % article_type))
     return root
-adders.append([add_article_type, [get_article_type]])
+adders.append([add_article_type, ['article_type']])
 
 def get_alt_title(m):
     return m.xpath("//alt-title[@alt-title-type='running-head']")[0]
+getters.append([get_alt_title])
 
 def add_alt_title(root, alt_title):
     title_group = root.xpath("//title-group")[0]
     remove_possible_node(title_group, "alt-title[@alt-title-type='running-head']")
     title_group.insert(1, alt_title)
     return root
-adders.append([add_alt_title, [get_alt_title]])    
+adders.append([add_alt_title, ['alt_title']])    
 
 def get_editors(m):
     return m.xpath("//contrib[@contrib-type='editor']")
+getters.append([get_editors])
 
 def get_affs(m):
     affs = {}
     for aff in m.xpath("//aff"):
         affs[aff.attrib['id']] = aff
     return affs
+getters.append([get_affs])
 
 def add_editors(root, editors, affs):
     article_meta = root.xpath("//article-meta")[0]
@@ -123,30 +132,32 @@ def add_editors(root, editors, affs):
         i += 1
     article_meta.insert(previous + 1, contrib_group)
     return root
-adders.append([add_editors, [get_editors, get_affs]]) 
+adders.append([add_editors, ['editors', 'affs']]) 
 
 def get_conflict(m):
     return m.xpath("//meta-name[contains(text(),'Competing Interest')]")[0].getnext().text
+getters.append([get_conflict])
 
 def add_conflict(root, conflict):
     author_notes = root.xpath("//author-notes")[0]
     remove_possible_node(author_notes, "fn[@fn-type='conflict']")
     author_notes.insert(1, html.fromstring("""<fn fn-type="conflict"><p>%s</p></fn>""" % conflict))
     return root
-adders.append([add_conflict, [get_conflict]])
+adders.append([add_conflict, ['conflict']])
 
 def get_contrib(m):
     result = ''
     for au in m.xpath("//meta-name[contains(text(),'Author Contributions')]"):
         result += re.sub(r'.*Author Contributions: ([^<]*).*', r'\1', au.text.replace('\n','')).capitalize() + ': ' + au.getnext().text.strip() + '. '
     return result.replace('Other: ', '')
+getters.append([get_contrib])
 
 def add_contrib(root, contrib):
     author_notes = root.xpath("//author-notes")[0]
     remove_possible_node(author_notes, "fn[@fn-type='con']")
     author_notes.insert(2, etree.fromstring("""<fn fn-type="con"><p>%s</p></fn>""" % contrib))
     return root
-adders.append([add_contrib, [get_contrib]])
+adders.append([add_contrib, ['contrib']])
 
 def get_author_notes_index(root):
     am = root.xpath("//article-meta")[0]
@@ -155,58 +166,64 @@ def get_author_notes_index(root):
 
 def get_collection(m):
     return str(int(m.xpath("//pub-date[@pub-type='epub']/year")[0].text))
+getters.append([get_collection])
 
 def add_collection(root, collection):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "pub-date[@pub-type='collection']")
     article_meta.insert(get_author_notes_index(root) + 1, etree.fromstring("<pub-date pub-type='collection'><year>%s</year></pub-date>" % collection))
     return root
-adders.append([add_collection, [get_collection]])
+adders.append([add_collection, ['collection']])
 
 def get_pubdate(m):
     return strip_zeros(copy.deepcopy(m.xpath("//pub-date[@pub-type='epub']")[0]))
+getters.append([get_pubdate, 'error: no pubdate - could not add pubdate, volume, issue, collection, copyright'])
 
 def add_pubdate(root, date):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "pub-date[@pub-type='epub']")
     article_meta.insert(get_author_notes_index(root) + 2, date)
     return root
-adders.append([add_pubdate, [get_pubdate]])
+adders.append([add_pubdate, ['pubdate']])
 
 def get_volume(m):
     volumes = {'pbiology':2002, 'pmedicine':2003, 'pcompbiol':2004, 'pgenetics':2004, 'ppathogens':2004, 'pone':2005, 'pntd':2006}
     year = m.xpath("//pub-date[@pub-type='epub']/year")[0].text
     return str(int(year) - volumes[get_journal(m)])
+getters.append([get_volume])
 
 def add_volume(root, volume):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "volume")
     article_meta.insert(get_author_notes_index(root) + 3, etree.fromstring("""<volume>%s</volume>""" % volume))
     return root
-adders.append([add_volume, [get_volume]])
+adders.append([add_volume, ['volume']])
 
 def get_issue(m):
     return str(int(m.xpath("//pub-date[@pub-type='epub']/month")[0].text))
+getters.append([get_issue])
 
 def add_issue(root, issue):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "issue")
     article_meta.insert(get_author_notes_index(root) + 4, etree.fromstring("""<issue>%s</issue>""" % issue))
     return root
-adders.append([add_issue, [get_issue]])
+adders.append([add_issue, ['issue']])
 
 def add_elocation(root, doi):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "elocation-id")
     article_meta.insert(get_author_notes_index(root) + 5, etree.fromstring("""<elocation-id>e%s</elocation-id>""" % doi[-5:]))
     return root
-adders.append([add_elocation, [get_article_doi]])
+adders.append([add_elocation, ['article_doi']])
 
 def get_received_date(m):
     return strip_zeros(m.xpath("//date[@date-type='received']")[0])
+getters.append([get_received_date])
 
 def get_accepted_date(m):
     return strip_zeros(m.xpath("//date[@date-type='accepted']")[0])
+getters.append([get_accepted_date])
 
 def add_history(root, received, accepted):
     article_meta = root.xpath("//article-meta")[0]
@@ -216,7 +233,7 @@ def add_history(root, received, accepted):
     history.append(accepted)
     article_meta.insert(get_author_notes_index(root) + 6, history)
     return root
-adders.append([add_history, [get_received_date, get_accepted_date]])
+adders.append([add_history, ['received_date', 'accepted_date']])
 
 def get_copyright_holder(m):
     s = m.xpath("//meta-name[contains(text(),'Government Employee')]")[0].getnext().text
@@ -224,6 +241,7 @@ def get_copyright_holder(m):
         return '<copyright-holder>'+m.xpath("//contrib[@contrib-type='author']/role[@content-type='1']")[0].getnext().xpath('surname')[0].text+' et al</copyright-holder>'
     else:
         return ''
+getters.append([get_copyright_holder])
 
 def get_copyright_statement(m):
     s = m.xpath("//meta-name[contains(text(),'Government Employee')]")[0].getnext().text
@@ -231,6 +249,7 @@ def get_copyright_statement(m):
         return 'This is an open-access article distributed under the terms of the Creative Commons Attribution License, which permits unrestricted use, distribution, and reproduction in any medium, provided the original author and source are credited.'
     if s.startswith('Yes'):
         return 'This is an open-access article, free of all copyright, and may be freely reproduced, distributed, transmitted, modified, built upon, or otherwise used by anyone for any lawful purpose. The work is made available under the Creative Commons CC0 public domain dedication.'
+getters.append([get_copyright_statement])
 
 def add_permissions(root, pubdate, holder, statement):
     article_meta = root.xpath("//article-meta")[0]
@@ -240,17 +259,18 @@ def add_permissions(root, pubdate, holder, statement):
     <copyright-year>%s</copyright-year>%s<license xlink:type="simple"><license-p>%s</license-p></license>
     </permissions>""" % (year, holder, statement)))
     return root
-adders.append([add_permissions, [get_pubdate, get_copyright_holder, get_copyright_statement]])
+adders.append([add_permissions, ['pubdate', 'copyright_holder', 'copyright_statement']])
 
 def get_funding_statement(m):
     return activate_links(m.xpath("//meta-name[contains(text(),'Financial Disclosure')]")[0].getnext().text)
+getters.append([get_funding_statement])
 
 def add_funding(root, statement):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "funding-group")
     article_meta.append(html.fromstring("""<funding-group"><funding-statement>%s</funding-statement></funding-group>""" % statement))
     return root
-adders.append([add_funding, [get_funding_statement]])
+adders.append([add_funding, ['funding_statement']])
 
 # remove SI in body if they exist
 def strip_body_si(root):
@@ -283,7 +303,7 @@ def fix_figures(root, doi):
         fig.xpath("graphic")[0].attrib["{http://www.w3.org/1999/xlink}href"] = fig_doi + ".tif"
         i += 1
     return root
-adders.append([fix_figures, [get_article_doi]])
+adders.append([fix_figures, ['article_doi']])
 
 def get_si_ext(m):
     exts = {}
@@ -292,6 +312,7 @@ def get_si_ext(m):
         name = si.xpath("label")[0].text.strip() if si.xpath("label") else filename[:filename.index('.')]
         exts[name] = filename[filename.rfind('.'):]
     return exts
+getters.append([get_si_ext])
 
 def fix_si(root, doi, exts):
     i = 1
@@ -311,7 +332,7 @@ def fix_si(root, doi, exts):
             si.remove(graphic)
         i += 1
     return root
-adders.append([fix_si, [get_article_doi, get_si_ext]])
+adders.append([fix_si, ['article_doi', 'si_ext']])
 
 if __name__ == '__main__':
     if len(sys.argv) != 4:
@@ -329,9 +350,26 @@ if __name__ == '__main__':
         log.write('** error parsing: '+str(ee)+'\n')
         log.close()
         sys.exit(1)
-    for adder, subfunctions in adders:
+    meta = {}
+    for args in getters:
+        getter = args[0]
+        error_message = args[1] if len(args)>1 else None
         try:
-            root = adder(root, *map(lambda x: x(m), subfunctions))
+            meta[getter.__name__.replace('get_','')] = getter(m)
+        except Exception as ee:
+            if error_message:
+                print error_message
+                log.write('** '+error_message+'\n')
+            else:
+                print 'error in '+getter.__name__+': '+str(ee)
+                log.write('** error in '+getter.__name__+': '+str(ee)+'\n')
+                traceback.print_exc()
+                log.write(traceback.format_exc())
+    for adder, inputs in adders:
+        try:
+            args = [meta[x] if x in meta else None for x in inputs]
+            if not None in args:
+                root = adder(root, *args)
         except Exception as ee:
             print 'error in '+adder.__name__+': '+str(ee)
             log.write('** error in '+adder.__name__+': '+str(ee)+'\n')
