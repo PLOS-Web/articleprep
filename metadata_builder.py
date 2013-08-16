@@ -164,20 +164,17 @@ def get_author_notes_index(root):
     author_notes = am.xpath("author-notes")[0]
     return am.index(author_notes)
 
-def get_collection(m):
-    return str(int(m.xpath("//pub-date[@pub-type='epub']/year")[0].text))
-getters.append([get_collection])
-
-def add_collection(root, collection):
+def add_collection(root, pubdate):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "pub-date[@pub-type='collection']")
-    article_meta.insert(get_author_notes_index(root) + 1, etree.fromstring("<pub-date pub-type='collection'><year>%s</year></pub-date>" % collection))
+    year = pubdate.xpath("year")[0].text
+    article_meta.insert(get_author_notes_index(root) + 1, etree.fromstring("<pub-date pub-type='collection'><year>%s</year></pub-date>" % year))
     return root
-adders.append([add_collection, ['collection']])
+adders.append([add_collection, ['pubdate']])
 
 def get_pubdate(m):
     return strip_zeros(copy.deepcopy(m.xpath("//pub-date[@pub-type='epub']")[0]))
-getters.append([get_pubdate, 'error: no pubdate - could not add pubdate, volume, issue, collection, copyright'])
+getters.append([get_pubdate, 'error: missing/incomplete pubdate - could not add pubdate, volume, issue, collection, copyright'])
 
 def add_pubdate(root, date):
     article_meta = root.xpath("//article-meta")[0]
@@ -186,29 +183,23 @@ def add_pubdate(root, date):
     return root
 adders.append([add_pubdate, ['pubdate']])
 
-def get_volume(m):
-    volumes = {'pbiology':2002, 'pmedicine':2003, 'pcompbiol':2004, 'pgenetics':2004, 'ppathogens':2004, 'pone':2005, 'pntd':2006}
-    year = m.xpath("//pub-date[@pub-type='epub']/year")[0].text
-    return str(int(year) - volumes[get_journal(m)])
-getters.append([get_volume])
-
-def add_volume(root, volume):
+def add_volume(root, pubdate):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "volume")
+    volumes = {'pbiology':2002, 'pmedicine':2003, 'pcompbiol':2004, 'pgenetics':2004, 'ppathogens':2004, 'pone':2005, 'pntd':2006}
+    year = pubdate.xpath("year")[0].text
+    volume = str(int(year) - volumes[get_journal(m)])
     article_meta.insert(get_author_notes_index(root) + 3, etree.fromstring("""<volume>%s</volume>""" % volume))
     return root
-adders.append([add_volume, ['volume']])
+adders.append([add_volume, ['pubdate']])
 
-def get_issue(m):
-    return str(int(m.xpath("//pub-date[@pub-type='epub']/month")[0].text))
-getters.append([get_issue])
-
-def add_issue(root, issue):
+def add_issue(root, pubdate):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "issue")
-    article_meta.insert(get_author_notes_index(root) + 4, etree.fromstring("""<issue>%s</issue>""" % issue))
+    month = pubdate.xpath("month")[0].text
+    article_meta.insert(get_author_notes_index(root) + 4, etree.fromstring("""<issue>%s</issue>""" % month))
     return root
-adders.append([add_issue, ['issue']])
+adders.append([add_issue, ['pubdate']])
 
 def add_elocation(root, doi):
     article_meta = root.xpath("//article-meta")[0]
