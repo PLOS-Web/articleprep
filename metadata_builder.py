@@ -318,6 +318,11 @@ def fix_si(root, doi, exts):
         si.attrib["{http://www.w3.org/1999/xlink}href"] = si_doi + ext.lower()
         try: si.attrib['mimetype'] = mimetypes.guess_type('x' + ext, False)[0]
         except Exception as ee: logger.error('error getting mimetype for ' + si_doi + ext + ': ' + str(ee))
+        if not si.xpath("caption") and si.xpath("p"):
+            caption = etree.Element('caption')
+            for p in si.xpath("p"):
+                caption.append(p)
+            si.append(caption)
         si.xpath("caption")[0].append(etree.fromstring('<p>('+ext.replace('.','').upper()+')</p>'))
         # remove graphic children if they exist
         for graphic in si.xpath("graphic"):
