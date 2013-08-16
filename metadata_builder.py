@@ -132,7 +132,7 @@ def add_editors(root, editors, affs):
         i += 1
     article_meta.insert(previous + 1, contrib_group)
     return root
-adders.append([add_editors, ['editors', 'affs']]) 
+adders.append([add_editors, ['editors', 'affs']])
 
 def get_author_notes_index(root):
     am = root.xpath("//article-meta")[0]
@@ -149,7 +149,7 @@ def add_conflict(root, conflict, author_notes_index):
     remove_possible_node(author_notes, "fn[@fn-type='conflict']")
     author_notes.insert(1, html.fromstring("""<fn fn-type="conflict"><p>%s</p></fn>""" % conflict))
     return root
-adders.append([add_conflict, ['conflict', 'get_author_notes_index']])
+adders.append([add_conflict, ['conflict', 'author_notes_index']])
 
 def get_contrib(m):
     result = ''
@@ -163,13 +163,13 @@ def add_contrib(root, contrib, author_notes_index):
     remove_possible_node(author_notes, "fn[@fn-type='con']")
     author_notes.insert(2, etree.fromstring("""<fn fn-type="con"><p>%s</p></fn>""" % contrib))
     return root
-adders.append([add_contrib, ['contrib', 'get_author_notes_index']])
+adders.append([add_contrib, ['contrib', 'author_notes_index']])
 
 def add_collection(root, pubdate, author_notes_index):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "pub-date[@pub-type='collection']")
     year = pubdate.xpath("year")[0].text
-    article_meta.insert(author_notes_index + 1, etree.fromstring("<pub-date pub-type='collection'><year>%s</year></pub-date>" % year))
+    article_meta.insert(get_author_notes_index(root) + 1, etree.fromstring("<pub-date pub-type='collection'><year>%s</year></pub-date>" % year))
     return root
 adders.append([add_collection, ['pubdate', 'author_notes_index']])
 
@@ -180,7 +180,7 @@ getters.append([get_pubdate, 'error: missing/incomplete pubdate - could not add 
 def add_pubdate(root, date, author_notes_index):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "pub-date[@pub-type='epub']")
-    article_meta.insert(author_notes_index + 2, date)
+    article_meta.insert(get_author_notes_index(root) + 2, date)
     return root
 adders.append([add_pubdate, ['pubdate', 'author_notes_index']])
 
@@ -190,7 +190,7 @@ def add_volume(root, pubdate, author_notes_index):
     volumes = {'pbiology':2002, 'pmedicine':2003, 'pcompbiol':2004, 'pgenetics':2004, 'ppathogens':2004, 'pone':2005, 'pntd':2006}
     year = pubdate.xpath("year")[0].text
     volume = str(int(year) - volumes[get_journal(m)])
-    article_meta.insert(author_notes_index + 3, etree.fromstring("""<volume>%s</volume>""" % volume))
+    article_meta.insert(get_author_notes_index(root) + 3, etree.fromstring("""<volume>%s</volume>""" % volume))
     return root
 adders.append([add_volume, ['pubdate', 'author_notes_index']])
 
@@ -198,14 +198,14 @@ def add_issue(root, pubdate, author_notes_index):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "issue")
     month = pubdate.xpath("month")[0].text
-    article_meta.insert(author_notes_index + 4, etree.fromstring("""<issue>%s</issue>""" % month))
+    article_meta.insert(get_author_notes_index(root) + 4, etree.fromstring("""<issue>%s</issue>""" % month))
     return root
 adders.append([add_issue, ['pubdate', 'author_notes_index']])
 
 def add_elocation(root, doi, author_notes_index):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "elocation-id")
-    article_meta.insert(author_notes_index + 5, etree.fromstring("""<elocation-id>e%s</elocation-id>""" % doi[-5:]))
+    article_meta.insert(get_author_notes_index(root) + 5, etree.fromstring("""<elocation-id>e%s</elocation-id>""" % doi[-5:]))
     return root
 adders.append([add_elocation, ['article_doi', 'author_notes_index']])
 
@@ -223,7 +223,7 @@ def add_history(root, received, accepted, author_notes_index):
     history = etree.Element('history')
     history.append(received)
     history.append(accepted)
-    article_meta.insert(author_notes_index + 6, history)
+    article_meta.insert(get_author_notes_index(root) + 6, history)
     return root
 adders.append([add_history, ['received_date', 'accepted_date', 'author_notes_index']])
 
@@ -247,7 +247,7 @@ def add_permissions(root, pubdate, holder, statement, author_notes_index):
     article_meta = root.xpath("//article-meta")[0]
     remove_possible_node(article_meta, "permissions")
     year = pubdate.xpath("year")[0].text
-    article_meta.insert(author_notes_index + 7, etree.fromstring("""<permissions xmlns:xlink="http://www.w3.org/1999/xlink">
+    article_meta.insert(get_author_notes_index(root) + 7, etree.fromstring("""<permissions xmlns:xlink="http://www.w3.org/1999/xlink">
     <copyright-year>%s</copyright-year>%s<license xlink:type="simple"><license-p>%s</license-p></license>
     </permissions>""" % (year, holder, statement)))
     return root
