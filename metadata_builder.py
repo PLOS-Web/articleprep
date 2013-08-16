@@ -8,11 +8,8 @@ import copy
 import mimetypes
 import lxml.etree as etree
 import lxml.html as html
-import logging
 import traceback
-import config
 
-base_logger = logging.getLogger('metadata_builder')
 adders = []  # functions that add metadata to article xml
 
 def remove_possible_node(parent, child):
@@ -315,21 +312,27 @@ adders.append([fix_si, [get_article_doi, get_si_ext]])
 if __name__ == '__main__':
     if len(sys.argv) != 4:
         sys.exit('usage: metadata_builder.py metadata.xml before.xml after.xml')
-    logger = logging.LoggerAdapter(base_logger, {'before': sys.argv[2]})
-    logger.info("metadata builder starting")
+    print >>sys.stderr, '** metadata builder starting'
+    log = open('/var/local/scripts/production/articleprep/log/metadata_builder.log', 'a')
+    log.write('-'*50 + '\n'+time.strftime("%Y-%m-%d %H:%M:%S   "+sys.argv[2]+'\n'))
     try:
         parser = etree.XMLParser(recover = True, remove_comments = True)
         m = etree.parse(sys.argv[1]).getroot()
         e = etree.parse(sys.argv[2], parser)
         root = e.getroot()
     except Exception as ee:
-        print 'error parsing: '+str(ee)+'\n'
-        logger.critical(ee) 
+        print 'error parsing: '+str(ee)
+        log.write('** error parsing: '+str(ee)+'\n')
+        log.close()
         sys.exit(1)
     for adder, subfunctions in adders:
         try:
             root = adder(root, *map(lambda x: x(m), subfunctions))
-        except Exception as ee: 
-            logger.exception(ee)
+        except Exception as ee:
+            print 'error in '+adder.__name__+': '+str(ee)
+            log.write('** error in '+adder.__name__+': '+str(ee)+'\n')
+            traceback.print_exc()
+            log.write(traceback.format_exc())
     e.write(sys.argv[3], xml_declaration = True, encoding = 'UTF-8')
-    logger.info("metadata builder exiting")
+    log.close()
+    print >>sys.stderr, '** metadata builder exiting'
