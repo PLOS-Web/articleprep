@@ -100,6 +100,10 @@ def get_affs(m):
 
 def add_editors(root, editors, affs):
     article_meta = root.xpath("//article-meta")[0]
+    for editor in article_meta.xpath("contrib-group/contrib[@contrib-type='editor']"):
+        article_meta.remove(editor.getparent())
+    for aff in article_meta.xpath("aff[contains(@id,'edit')]"):
+        article_meta.remove(aff)
     previous = article_meta.index(article_meta.xpath("aff")[-1])
     contrib_group = etree.Element('contrib-group')
     i = 1
