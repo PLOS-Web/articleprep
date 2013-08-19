@@ -319,7 +319,7 @@ def fix_si(root, doi, exts):
         try:
             si.attrib['mimetype'] = mimetypes.guess_type('x' + ext, False)[0]
         except Exception as ee:
-            print 'error getting mimetype for ' + si_doi + ext + ': ' + str(ee)
+            print >>sys.stderr, 'error getting mimetype for ' + si_doi + ext + ': ' + str(ee)
             log.write('error getting mimetype for ' + si_doi + ext + ': ' + str(ee)+'\n')            
         if not si.xpath("caption") and si.xpath("p"):
             caption = etree.Element('caption')
@@ -346,7 +346,7 @@ if __name__ == '__main__':
         e = etree.parse(sys.argv[2], parser)
         root = e.getroot()
     except Exception as ee:
-        print 'error parsing: '+str(ee)
+        print >>sys.stderr, 'error parsing: '+str(ee)
         log.write('error parsing: '+str(ee)+'\n')
         log.close()
         sys.exit(1)
@@ -362,7 +362,7 @@ if __name__ == '__main__':
                 print error_message
                 log.write(error_message+'\n')
             else:
-                print 'error in '+getter.__name__+': '+str(ee)
+                print >>sys.stderr, 'error in '+getter.__name__+': '+str(ee)
                 log.write('error in '+getter.__name__+': '+str(ee)+'\n')
                 traceback.print_exc()
                 log.write(traceback.format_exc())
@@ -372,7 +372,7 @@ if __name__ == '__main__':
             if not None in args:
                 root = adder(root, *args)
         except Exception as ee:
-            print 'error in '+adder.__name__+': '+str(ee)
+            print >>sys.stderr, 'error in '+adder.__name__+': '+str(ee)
             log.write('error in '+adder.__name__+': '+str(ee)+'\n')
             traceback.print_exc()
             log.write(traceback.format_exc())
