@@ -316,8 +316,11 @@ def fix_si(root, doi, exts):
         si.attrib['id'] = si_doi
         ext = exts.get(si.xpath("label")[0].text.strip(), '')
         si.attrib["{http://www.w3.org/1999/xlink}href"] = si_doi + ext.lower()
-        try: si.attrib['mimetype'] = mimetypes.guess_type('x' + ext, False)[0]
-        except Exception as ee: logger.error('error getting mimetype for ' + si_doi + ext + ': ' + str(ee))
+        try:
+            si.attrib['mimetype'] = mimetypes.guess_type('x' + ext, False)[0]
+        except Exception as ee:
+            print 'error getting mimetype for ' + si_doi + ext + ': ' + str(ee)
+            log.write('error getting mimetype for ' + si_doi + ext + ': ' + str(ee)+'\n')            
         if not si.xpath("caption") and si.xpath("p"):
             caption = etree.Element('caption')
             for p in si.xpath("p"):
@@ -344,7 +347,7 @@ if __name__ == '__main__':
         root = e.getroot()
     except Exception as ee:
         print 'error parsing: '+str(ee)
-        log.write('** error parsing: '+str(ee)+'\n')
+        log.write('error parsing: '+str(ee)+'\n')
         log.close()
         sys.exit(1)
     meta = {}
@@ -357,10 +360,10 @@ if __name__ == '__main__':
         except Exception as ee:
             if error_message:
                 print error_message
-                log.write('** '+error_message+'\n')
+                log.write(error_message+'\n')
             else:
                 print 'error in '+getter.__name__+': '+str(ee)
-                log.write('** error in '+getter.__name__+': '+str(ee)+'\n')
+                log.write('error in '+getter.__name__+': '+str(ee)+'\n')
                 traceback.print_exc()
                 log.write(traceback.format_exc())
     for adder, inputs in adders:
@@ -370,7 +373,7 @@ if __name__ == '__main__':
                 root = adder(root, *args)
         except Exception as ee:
             print 'error in '+adder.__name__+': '+str(ee)
-            log.write('** error in '+adder.__name__+': '+str(ee)+'\n')
+            log.write('error in '+adder.__name__+': '+str(ee)+'\n')
             traceback.print_exc()
             log.write(traceback.format_exc())
     e.write(sys.argv[3], xml_declaration = True, encoding = 'UTF-8')
