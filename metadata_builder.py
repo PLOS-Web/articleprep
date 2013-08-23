@@ -302,7 +302,7 @@ def get_si_ext(m):
     for si in m.xpath("//supplementary-material"):
         filename = si.attrib['{http://www.w3.org/1999/xlink}href']
         name = si.xpath("label")[0].text.strip() if si.xpath("label") else filename[:filename.index('.')]
-        exts[name] = filename[filename.rfind('.'):]
+        exts[name.lower()] = filename[filename.rfind('.'):]
     return exts
 getters.append([get_si_ext])
 
@@ -314,7 +314,7 @@ def fix_si(root, doi, exts):
             if xref.attrib['rid'] == si.attrib['id']:
                 xref.attrib['rid'] = si_doi
         si.attrib['id'] = si_doi
-        ext = exts.get(si.xpath("label")[0].text.strip(), '')
+        ext = exts.get(si.xpath("label")[0].text.lower().strip(), '')
         si.attrib["{http://www.w3.org/1999/xlink}href"] = si_doi + ext.lower()
         try:
             si.attrib['mimetype'] = mimetypes.guess_type('x' + ext, False)[0]
