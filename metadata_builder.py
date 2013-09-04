@@ -331,7 +331,7 @@ def fix_si(root, doi, exts):
         except Exception as ee:
             print >>sys.stderr, 'error getting mimetype for ' + si_doi + ext + ': ' + str(ee)
             log.write('error getting mimetype for ' + si_doi + ext + ': ' + str(ee)+'\n')            
-        if not si.xpath("caption") and si.xpath("p"):
+        if not si.xpath("caption"):
             caption = etree.Element('caption')
             for p in si.xpath("p"):
                 caption.append(p)
