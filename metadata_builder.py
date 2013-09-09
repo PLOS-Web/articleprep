@@ -302,7 +302,11 @@ def fix_tables(root, doi):
         label = table.xpath("label")[0].text if table.xpath("label") else table.attrib['id']
         num = re.sub(r'\D*(\d+)', r'\1', label)
         table_doi = doi[-12:] + ".t" + num.zfill(3)
-        table.attrib['id'] = re.sub('\.', '-', table_doi)
+        table_id = re.sub('\.', '-', table_doi)
+        for xref in root.xpath("//xref[@ref-type='table']"):
+            if xref.attrib['rid'] == table.attrib['id']:
+                xref.attrib['rid'] = table_id
+        table.attrib['id'] = table_id
         table.insert(0, etree.fromstring("""<object-id pub-id-type="doi">10.1371/journal.%s</object-id>""" % table_doi))
     return root
 adders.append([fix_tables, ['article_doi']])
