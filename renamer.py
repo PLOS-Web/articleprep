@@ -22,33 +22,33 @@ for si in article.xpath("//supplementary-material"):
 	hrefs[label] = si.attrib['{http://www.w3.org/1999/xlink}href']
 
 def call(command):
-	#print >>sys.stderr, ' '.join(command)
 	call = sp.Popen(command, stdout = sp.PIPE, stderr = sp.PIPE, shell = False)
 	output = call.communicate()
 	if call.wait() != 0:
 		print >>sys.stderr, output[0] or output[1]
 	return output[0]
 
+files = call(["unzip", "-l", doi_zip])
 for fig in meta.xpath("//fig"):
-	label = fig.xpath("label")[0].text
-	print >>sys.stderr, "FIG_LABEL: " + label
 	for graphic in fig.xpath("graphic"):
 		fig_file = graphic.attrib['{http://www.w3.org/1999/xlink}href']
-	print >>sys.stderr, "FIG_FILE: " + fig_file
-	if re.search(r'igure \d+', label):
-		num = re.sub(r'\D*(\d+)\D*', r'\1', label)
-		print >>sys.stderr, "FIG_NUM: " + num
-		new_name = doi + ".g" + str(num).zfill(3) + ".tif"
-		print >>sys.stderr, "NEW_NAME: " + new_name
-		unzip = ["unzip", "-o", si_zip, fig_file, "-d", destination]
-		print >>sys.stderr, "UNZIP: " + ' '.join(unzip) + "\n"
-		call(unzip)
-		if fig_file != fig_file.lower():
-			call(["mv", destination+'/'+fig_file, destination+'/'+fig_file.lower()])
-		#print >>sys.stderr, call(["/var/local/scripts/production/articleprep/articleprep/image_processor.py", destination+'/'+fig_file])
-		call(["mv", destination+'/'+fig_file.lower().replace('.eps','.tif'), destination+'/'+new_name])
-		call(["zip", "-mj", destination+'/'+doi_zip, destination+'/'+new_name])
-		#call(["zip", "-d", destination+'/'+doi_zip, fig_file])
+	if fig_file in files:
+		label = fig.xpath("label")[0].text
+		print >>sys.stderr, "FIG_LABEL: " + label
+		print >>sys.stderr, "FIG_FILE: " + fig_file
+		if re.search(r'igure \d+', label):
+			num = re.sub(r'\D*(\d+)\D*', r'\1', label)
+			print >>sys.stderr, "FIG_NUM: " + num
+			new_name = doi + ".g" + str(num).zfill(3) + ".tif"
+			print >>sys.stderr, "NEW_NAME: " + new_name
+			unzip = ["unzip", "-o", si_zip, fig_file, "-d", destination]
+			print >>sys.stderr, "UNZIP: " + ' '.join(unzip) + "\n"
+			call(unzip)
+			if fig_file != fig_file.lower():
+				call(["mv", destination+'/'+fig_file, destination+'/'+fig_file.lower()])
+			#print >>sys.stderr, call(["/var/local/scripts/production/articleprep/articleprep/image_processor.py", destination+'/'+fig_file.lower()])
+			call(["mv", destination+'/'+fig_file.lower().replace('.eps','.tif'), destination+'/'+new_name])
+			call(["zip", "-mj", destination+'/'+doi_zip, destination+'/'+new_name])
 
 aries_names = {}
 for supp in meta.xpath("//supplementary-material"):
