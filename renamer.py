@@ -28,11 +28,11 @@ def call(command):
         print >>sys.stderr, output[0] or output[1]
     return output[0]
 
-files = call(["unzip", "-l", doi_zip])
+si_files = call(["unzip", "-l", si_zip])
 for fig in meta.xpath("//fig"):
     for graphic in fig.xpath("graphic"):
         fig_file = graphic.attrib['{http://www.w3.org/1999/xlink}href']
-    if fig_file in files:
+    if fig_file in si_files:
         label = fig.xpath("label")[0].text
         print >>sys.stderr, "FIG_LABEL: " + label
         print >>sys.stderr, "FIG_FILE: " + fig_file
