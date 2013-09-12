@@ -32,10 +32,13 @@ for si in article.xpath("//supplementary-material"):
     article_links[label] = si.attrib['{http://www.w3.org/1999/xlink}href']
 
 meta_links = {}
+strk_img = {}
 for si in meta.xpath("//supplementary-material"):
     label = normalize(si.xpath("label")[0].text)
     link = si.attrib['{http://www.w3.org/1999/xlink}href']
-    if label in meta_links:
+    if "Striking Image" in label:
+         strk_img[label] = link
+    elif label in meta_links:
         prints("error: label '"+label+"' is duplicated in the metadata")
         file_list = call(["unzip", "-l", doi_zip, link])
         print >>sys.stderr, "Quote list:", file_list
@@ -47,57 +50,55 @@ for si in meta.xpath("//supplementary-material"):
     else:
         meta_links[label] = link
 
-si_files = call(["unzip", "-l", si_zip])
+export = call(["unzip", "-l", si_zip])
 for fig in meta.xpath("//fig"):
     for graphic in fig.xpath("graphic"):
         fig_file = graphic.attrib['{http://www.w3.org/1999/xlink}href']
-    if fig_file in si_files:
+    if fig_file in export:
         label = fig.xpath("label")[0].text
         print >>sys.stderr, "FIG_LABEL: " + label
         print >>sys.stderr, "FIG_FILE: " + fig_file
         if re.search(r'igure \d+', label):
             num = re.sub(r'\D*(\d+)\D*', r'\1', label)
-            print >>sys.stderr, "FIG_NUM: " + num
             new_name = doi + ".g" + str(num).zfill(3) + ".tif"
             print >>sys.stderr, "NEW_NAME: " + new_name
-            unzip = ["unzip", "-o", si_zip, fig_file, "-d", destination]
-            print >>sys.stderr, "UNZIP: " + ' '.join(unzip) + "\n"
-            call(unzip)
+            print >>sys.stderr, "UNZIP: ", call(["unzip", "-o", si_zip, fig_file, "-d", destination])
             if fig_file != fig_file.lower():
                 call(["mv", destination+'/'+fig_file, destination+'/'+fig_file.lower()])
             #prints(call(["/var/local/scripts/production/articleprep/articleprep/image_processor.py", destination+'/'+fig_file.lower()]))
             call(["mv", destination+'/'+fig_file.lower().replace('.eps','.tif'), destination+'/'+new_name])
             call(["zip", "-mj", destination+'/'+doi_zip, destination+'/'+new_name])
 
-for key in meta_links:
-    print >>sys.stderr, "Aries name:", meta_links[key]
-    unzip_name = meta_links[key]  # TODO: lines 749-750 of ariesPullMerops
-    print >>sys.stderr, "UNZIP NAME:", meta_links[key]
-    if key in article_links or "Striking Image" in key:
-        unzip = call(["unzip", "-o", si_zip, unzip_name, "-d", destination])
-        print >>sys.stderr, "UNZIP SI:", unzip
-        if "inflating" in unzip or "extracting" in unzip:
-            if re.search(r'\.s\d{3}$', article_links[key]):
-                si_ext = meta_links[key].split('.')[-1]
-                article_links[key] += '.' + si_ext.lower()
-            if "Striking Image" in key:
-                if '.tif' in meta_links[key]:
-                    print >>sys.stderr, "MOVE:", call(["mv", destination+'/'+meta_links[key], destination+'/'+doi+'.strk.tif'])
-                    call(["zip", "-j", destination+'/'+doi_zip, destination+'/'+doi+'.strk.tif'])
-                else:
-                    prints("striking image is not tif")
-                continue
-            else:
-                call(["mv", destination+'/'+meta_links[key], destination+'/'+article_links[key]])
-                call(["zip", "-mj", destination+'/'+doi_zip, destination+'/'+article_links[key]])
+for label in strk_img:
+    unzip = call(["unzip", "-o", si_zip, strk_img[label], "-d", destination])
+    print >>sys.stderr, "UNZIP SI:", unzip
+    if "inflating" in unzip or "extracting" in unzip:
+        if '.tif' in strk_img[label]:
+            print >>sys.stderr, "MOVE:", call(["mv", destination+'/'+strk_img[label], destination+'/'+doi+'.strk.tif'])
+            call(["zip", "-j", destination+'/'+doi_zip, destination+'/'+doi+'.strk.tif'])
         else:
-            prints("error: SI file '"+meta_links[key]+"' with label '"+key+"' is cited in metadata, but not included in package")
+            prints("striking image is not tif")
     else:
-        prints("error: no match for label '"+key+"' in article XML; ariesPull could not rename file '"+meta_links[key]+"'")
-        unzip = call(["unzip", "-o", si_zip, meta_links[key], "-d", destination])
-        if meta_links[key] in unzip:
-            prints("error: SI file '"+meta_links[key]+"' with label '"+key+"' is cited in metadata, but not included in package")
+        prints("error: SI file '"+strk_img[label]+"' with label '"+label+"' is cited in metadata, but not included in package")
+
+for label in set(article_links).intersection(set(meta_links)):
+    print >>sys.stderr, "Aries name:", meta_links[label]
+    unzip = call(["unzip", "-o", si_zip, meta_links[label], "-d", destination])
+    print >>sys.stderr, "UNZIP SI:", unzip
+    if "inflating" in unzip or "extracting" in unzip:
+        if re.search(r'\.s\d{3}$', article_links[label]):
+            si_ext = meta_links[label].split('.')[-1]
+            article_links[label] += '.' + si_ext.lower()
         else:
-            call(["zip", "-mj", destination+'/'+doi_zip, destination+'/'+meta_links[key]])
+            call(["mv", destination+'/'+meta_links[label], destination+'/'+article_links[label]])
+            call(["zip", "-mj", destination+'/'+doi_zip, destination+'/'+article_links[label]])
+    else:
+        prints("error: SI file '"+meta_links[label]+"' with label '"+label+"' is cited in article XML, but not included in package")
+
+for label in set(article_links)-set(meta_links):
+    prints("error: article XML cites '"+label+"', metadata does not; should be '"+article_links[label]+"'")
+
+for label in set(meta_links)-set(article_links):
+    prints("warning: metadata cites '"+label+"', article XML does not; ariesPull could not rename file '"+meta_links[label]+"'")
 
 call(["rm", "-f", destination+'/'+si_zip])
