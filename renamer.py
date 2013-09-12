@@ -15,6 +15,17 @@ article = etree.parse(article, parser)
 def normalize(s):
     return s.strip().replace(' ','').lower().translate(None, string.punctuation)
 
+def prints(s):
+    print >>sys.stderr, s
+    print s
+
+def call(command):
+    call = sp.Popen(command, stdout = sp.PIPE, stderr = sp.PIPE, shell = False)
+    output = call.communicate()
+    if call.wait() != 0:
+        print >>sys.stderr, output[0] or output[1]
+    return output[0]
+
 article_links = {}
 for si in article.xpath("//supplementary-material"):
     label = normalize(si.xpath("label")[0].text)
@@ -25,23 +36,16 @@ for si in meta.xpath("//supplementary-material"):
     label = normalize(si.xpath("label")[0].text)
     link = si.attrib['{http://www.w3.org/1999/xlink}href']
     if label in meta_links:
-        print "error: label '"+label+"' is duplicated in the metadata"
+        prints("error: label '"+label+"' is duplicated in the metadata")
         file_list = call(["unzip", "-l", doi_zip, link])
         print >>sys.stderr, "Quote list:", file_list
         print >>sys.stderr, "Quote link:", link
         if link in file_list:
-            print "ariesPull cannot rename associated file '"+link+"'"
+            prints("ariesPull cannot rename associated file '"+link+"'")
         else:
-            print "associated file '"+link+"' is not included in package"
+            prints("associated file '"+link+"' is not included in package")
     else:
         meta_links[label] = link
-
-def call(command):
-    call = sp.Popen(command, stdout = sp.PIPE, stderr = sp.PIPE, shell = False)
-    output = call.communicate()
-    if call.wait() != 0:
-        print >>sys.stderr, output[0] or output[1]
-    return output[0]
 
 si_files = call(["unzip", "-l", si_zip])
 for fig in meta.xpath("//fig"):
@@ -61,7 +65,7 @@ for fig in meta.xpath("//fig"):
             call(unzip)
             if fig_file != fig_file.lower():
                 call(["mv", destination+'/'+fig_file, destination+'/'+fig_file.lower()])
-            #print >>sys.stderr, call(["/var/local/scripts/production/articleprep/articleprep/image_processor.py", destination+'/'+fig_file.lower()])
+            #prints(call(["/var/local/scripts/production/articleprep/articleprep/image_processor.py", destination+'/'+fig_file.lower()]))
             call(["mv", destination+'/'+fig_file.lower().replace('.eps','.tif'), destination+'/'+new_name])
             call(["zip", "-mj", destination+'/'+doi_zip, destination+'/'+new_name])
 
@@ -81,18 +85,18 @@ for key in meta_links:
                     print >>sys.stderr, "MOVE:", call(["mv", destination+'/'+meta_links[key], destination+'/'+doi+'.strk.tif'])
                     call(["zip", "-j", destination+'/'+doi_zip, destination+'/'+doi+'.strk.tif'])
                 else:
-                    print >>sys.stderr, "striking image is not tif"
+                    prints("striking image is not tif")
                 continue
             else:
                 call(["mv", destination+'/'+meta_links[key], destination+'/'+article_links[key]])
                 call(["zip", "-mj", destination+'/'+doi_zip, destination+'/'+article_links[key]])
         else:
-            print >>sys.stderr, "error: SI file '"+meta_links[key]+"' with label '"+key+"' is cited in metadata, but not included in package"
+            prints("error: SI file '"+meta_links[key]+"' with label '"+key+"' is cited in metadata, but not included in package")
     else:
-        print >>sys.stderr, "error: no match for label '"+key+"' in article XML; ariesPull could not rename file '"+meta_links[key]+"'"
+        prints("error: no match for label '"+key+"' in article XML; ariesPull could not rename file '"+meta_links[key]+"'")
         unzip = call(["unzip", "-o", si_zip, meta_links[key], "-d", destination])
         if meta_links[key] in unzip:
-            print >>sys.stderr, "error: SI file '"+meta_links[key]+"' with label '"+key+"' is cited in metadata, but not included in package"
+            prints("error: SI file '"+meta_links[key]+"' with label '"+key+"' is cited in metadata, but not included in package")
         else:
             call(["zip", "-mj", destination+'/'+doi_zip, destination+'/'+meta_links[key]])
 
