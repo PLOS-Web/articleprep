@@ -23,18 +23,18 @@ for si in article.xpath("//supplementary-material"):
 meta_links = {}
 for si in meta.xpath("//supplementary-material"):
     label = normalize(si.xpath("label")[0].text)
-    meta_href = si.attrib['{http://www.w3.org/1999/xlink}href']
+    link = si.attrib['{http://www.w3.org/1999/xlink}href']
     if label in meta_links:
         print "error: label '"+label+"' is duplicated in the metadata"
-        file_list = call(["unzip", "-l", doi_zip, meta_href])
+        file_list = call(["unzip", "-l", doi_zip, link])
         print >>sys.stderr, "Quote list:", file_list
-        print >>sys.stderr, "Quote meta_href:", meta_href
-        if meta_href in file_list:
-            print "ariesPull cannot rename associated file '"+meta_href+"'"
+        print >>sys.stderr, "Quote link:", link
+        if link in file_list:
+            print "ariesPull cannot rename associated file '"+link+"'"
         else:
-            print "associated file '"+meta_href+"' is not included in package"
+            print "associated file '"+link+"' is not included in package"
     else:
-        meta_links[label] = meta_href
+        meta_links[label] = link
 
 def call(command):
     call = sp.Popen(command, stdout = sp.PIPE, stderr = sp.PIPE, shell = False)
