@@ -11,15 +11,30 @@ doi, meta, article, destination, si_zip, doi_zip = sys.argv[1:]
 parser = etree.XMLParser(recover = True)
 meta = etree.parse(meta, parser)
 article = etree.parse(article, parser)
-hrefs = {}
 
 def normalize(s):
     return s.strip().replace(' ','').lower().translate(None, string.punctuation)
 
-# populate hrefs with si links
+article_links = {}
 for si in article.xpath("//supplementary-material"):
     label = normalize(si.xpath("label")[0].text)
-    hrefs[label] = si.attrib['{http://www.w3.org/1999/xlink}href']
+    article_links[label] = si.attrib['{http://www.w3.org/1999/xlink}href']
+
+meta_links = {}
+for si in meta.xpath("//supplementary-material"):
+    label = normalize(si.xpath("label")[0].text)
+    meta_href = si.attrib['{http://www.w3.org/1999/xlink}href']
+    if label in meta_links:
+        print "error: label '"+label+"' is duplicated in the metadata"
+        file_list = call(["unzip", "-l", doi_zip, meta_href])
+        print >>sys.stderr, "Quote list:", file_list
+        print >>sys.stderr, "Quote meta_href:", meta_href
+        if meta_href in file_list:
+            print "ariesPull cannot rename associated file '"+meta_href+"'"
+        else:
+            print "associated file '"+meta_href+"' is not included in package"
+    else:
+        meta_links[label] = meta_href
 
 def call(command):
     call = sp.Popen(command, stdout = sp.PIPE, stderr = sp.PIPE, shell = False)
@@ -50,51 +65,35 @@ for fig in meta.xpath("//fig"):
             call(["mv", destination+'/'+fig_file.lower().replace('.eps','.tif'), destination+'/'+new_name])
             call(["zip", "-mj", destination+'/'+doi_zip, destination+'/'+new_name])
 
-aries_names = {}
-for supp in meta.xpath("//supplementary-material"):
-    meta_href = supp.attrib['{http://www.w3.org/1999/xlink}href']
-    label = normalize(supp.xpath("label")[0].text)
-    if label in aries_names:
-        print "error: label "+label+" is duplicated in the metadata"
-        file_list = call(["unzip", "-l", doi_zip, meta_href])
-        print >>sys.stderr, "Quote list:", file_list
-        print >>sys.stderr, "Quote meta_href:", meta_href
-        if meta_href in file_list:
-            print "ariesPull cannot rename associated file "+meta_href
-        else:
-            print "associated file "+meta_href+" is not included in package"
-    else:
-        aries_names[label] = meta_href
-
-for key in aries_names:
-    print >>sys.stderr, "Aries name:", aries_names[key]
-    unzip_name = aries_names[key]  # TODO: lines 749-750 of ariesPullMerops
-    print >>sys.stderr, "UNZIP NAME:", aries_names[key]
-    if key in hrefs or "Striking Image" in key:
+for key in meta_links:
+    print >>sys.stderr, "Aries name:", meta_links[key]
+    unzip_name = meta_links[key]  # TODO: lines 749-750 of ariesPullMerops
+    print >>sys.stderr, "UNZIP NAME:", meta_links[key]
+    if key in article_links or "Striking Image" in key:
         unzip = call(["unzip", "-o", si_zip, unzip_name, "-d", destination])
         print >>sys.stderr, "UNZIP SI:", unzip
         if "inflating" in unzip or "extracting" in unzip:
-            if re.search(r'\.s\d{3}$', hrefs[key]):
-                si_ext = aries_names[key].split('.')[-1]
-                hrefs[key] += '.' + si_ext.lower()
+            if re.search(r'\.s\d{3}$', article_links[key]):
+                si_ext = meta_links[key].split('.')[-1]
+                article_links[key] += '.' + si_ext.lower()
             if "Striking Image" in key:
-                if '.tif' in aries_names[key]:
-                    print >>sys.stderr, "MOVE:", call(["mv", destination+'/'+aries_names[key], destination+'/'+doi+'.strk.tif'])
+                if '.tif' in meta_links[key]:
+                    print >>sys.stderr, "MOVE:", call(["mv", destination+'/'+meta_links[key], destination+'/'+doi+'.strk.tif'])
                     call(["zip", "-j", destination+'/'+doi_zip, destination+'/'+doi+'.strk.tif'])
                 else:
                     print >>sys.stderr, "striking image is not tif"
                 continue
             else:
-                call(["mv", destination+'/'+aries_names[key], destination+'/'+hrefs[key]])
-                call(["zip", "-mj", destination+'/'+doi_zip, destination+'/'+hrefs[key]])
+                call(["mv", destination+'/'+meta_links[key], destination+'/'+article_links[key]])
+                call(["zip", "-mj", destination+'/'+doi_zip, destination+'/'+article_links[key]])
         else:
-            print >>sys.stderr, "error: SI file '"+aries_names[key]+"' with label '"+key+"' is cited in metadata, but not included in package"
+            print >>sys.stderr, "error: SI file '"+meta_links[key]+"' with label '"+key+"' is cited in metadata, but not included in package"
     else:
-        print >>sys.stderr, "error: no match for label '"+key+"' in article XML; ariesPull could not rename file '"+aries_names[key]+"'"
-        unzip = call(["unzip", "-o", si_zip, aries_names[key], "-d", destination])
-        if aries_names[key] in unzip:
-            print >>sys.stderr, "error: SI file '"+aries_names[key]+"' with label '"+key+"' is cited in metadata, but not included in package"
+        print >>sys.stderr, "error: no match for label '"+key+"' in article XML; ariesPull could not rename file '"+meta_links[key]+"'"
+        unzip = call(["unzip", "-o", si_zip, meta_links[key], "-d", destination])
+        if meta_links[key] in unzip:
+            print >>sys.stderr, "error: SI file '"+meta_links[key]+"' with label '"+key+"' is cited in metadata, but not included in package"
         else:
-            call(["zip", "-mj", destination+'/'+doi_zip, destination+'/'+aries_names[key]])
+            call(["zip", "-mj", destination+'/'+doi_zip, destination+'/'+meta_links[key]])
 
 call(["rm", "-f", destination+'/'+si_zip])
