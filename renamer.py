@@ -31,8 +31,8 @@ for si in article.xpath("//supplementary-material"):
     label = normalize(si.xpath("label")[0].text)
     article_links[label] = si.attrib['{http://www.w3.org/1999/xlink}href']
 
-meta_links = {}
 strk_img = {}
+meta_links = {}
 for si in meta.xpath("//supplementary-material"):
     label = normalize(si.xpath("label")[0].text)
     link = si.attrib['{http://www.w3.org/1999/xlink}href']
@@ -65,7 +65,7 @@ for fig in meta.xpath("//fig"):
             print >>sys.stderr, "UNZIP: ", call(["unzip", "-o", si_zip, fig_file, "-d", destination])
             if fig_file != fig_file.lower():
                 call(["mv", destination+'/'+fig_file, destination+'/'+fig_file.lower()])
-            #prints(call(["/var/local/scripts/production/articleprep/articleprep/image_processor.py", destination+'/'+fig_file.lower()]))
+            prints(call(["/var/local/scripts/production/articleprep/articleprep/image_processor.py", destination+'/'+fig_file.lower()]))
             call(["mv", destination+'/'+fig_file.lower().replace('.eps','.tif'), destination+'/'+new_name])
             call(["zip", "-mj", destination+'/'+doi_zip, destination+'/'+new_name])
 
@@ -77,9 +77,9 @@ for label in strk_img:
             print >>sys.stderr, "MOVE:", call(["mv", destination+'/'+strk_img[label], destination+'/'+doi+'.strk.tif'])
             call(["zip", "-j", destination+'/'+doi_zip, destination+'/'+doi+'.strk.tif'])
         else:
-            prints("striking image is not tif")
+            prints("warning: striking image is not tif")
     else:
-        prints("error: SI file '"+strk_img[label]+"' with label '"+label+"' is cited in metadata, but not included in package")
+        prints("error: striking image '"+strk_img[label]+"' with label '"+label+"' is not in zip; download from EM")
 
 for label in set(article_links).intersection(set(meta_links)):
     print >>sys.stderr, "Aries name:", meta_links[label]
@@ -93,12 +93,12 @@ for label in set(article_links).intersection(set(meta_links)):
             call(["mv", destination+'/'+meta_links[label], destination+'/'+article_links[label]])
             call(["zip", "-mj", destination+'/'+doi_zip, destination+'/'+article_links[label]])
     else:
-        prints("error: SI file '"+meta_links[label]+"' with label '"+label+"' is cited in article XML, but not included in package")
+        prints("error: SI file '"+meta_links[label]+"' with label '"+label+"' is in article XML but not zip; download from EM")
 
 for label in set(article_links)-set(meta_links):
-    prints("error: article XML cites '"+label+"', metadata does not; should be '"+article_links[label]+"'")
+    prints("error: SI file '"+label+"' is in article XML but not metadata; should be '"+article_links[label]+"'")
 
 for label in set(meta_links)-set(article_links):
-    prints("warning: metadata cites '"+label+"', article XML does not; ariesPull could not rename file '"+meta_links[label]+"'")
+    prints("warning: possible SI file '"+meta_links[label]+"' with label '"+label+"' is in metadata but not article XML")
 
 call(["rm", "-f", destination+'/'+si_zip])
