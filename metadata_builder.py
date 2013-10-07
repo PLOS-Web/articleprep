@@ -232,7 +232,25 @@ def get_copyright_holder(m):
     if s.startswith('Yes'):
         return ''
     else:
-        return '<copyright-holder>'+m.xpath("//contrib[@contrib-type='author']/role[@content-type='1']")[0].getnext().xpath('surname')[0].text+' et al</copyright-holder>'        
+        if (m.xpath("//contrib[@contrib-type='author']/role[@content-type='2']") and not
+            m.xpath("//contrib[@contrib-type='author']/role[@content-type='3']")):
+            au1surname = (m.xpath("//contrib[@contrib-type='author']/role[@content-type='1']")
+                          [0].getnext().xpath('surname')[0].text.strip())
+            au2surname = (m.xpath("//contrib[@contrib-type='author']/role[@content-type='2']")
+                          [0].getnext().xpath('surname')[0].text.strip())
+            return '<copyright-holder>'+au1surname+', '+au2surname+'</copyright-holder>'
+        elif (m.xpath("//contrib[@contrib-type='author']/role[@content-type='1']") and not
+              m.xpath("//contrib[@contrib-type='author']/role[@content-type='2']")):
+            firstname = (m.xpath("//contrib[@contrib-type='author']/role[@content-type='1']")
+                         [0].getnext().xpath('given-names')[0].text.strip())
+            lastname = (m.xpath("//contrib[@contrib-type='author']/role[@content-type='1']")
+                        [0].getnext().xpath('surname')[0].text.strip())
+            return '<copyright-holder>'+firstname+' '+lastname+'</copyright-holder>'    
+        elif (m.xpath("//contrib[@contrib-type='author']/role[@content-type='3']") and 
+              m.xpath("//contrib[@contrib-type='author']/role[@content-type='2']")):
+            au1surname = (m.xpath("//contrib[@contrib-type='author']/role[@content-type='1']")
+                          [0].getnext().xpath('surname')[0].text)
+            return '<copyright-holder>'+au1surname+' et al</copyright-holder>'        
 getters.append([get_copyright_holder, 'error: no first author - could not add copyright'])
 
 def get_copyright_statement(m):
