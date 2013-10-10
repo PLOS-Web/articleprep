@@ -42,7 +42,7 @@ def prepare(images):
             new_image = image.replace('.eps', '.tif')
             top = new_image.replace('.tif', '_top.tif')
             bottom = new_image.replace('.tif', '_bottom.tif')
-            for step in [convert, ocr, grep]:
+            for step in [convert]:
                 try: step(image, new_image, top, bottom)
                 except Exception as ee: log.write('** error in ' + step.__name__ + ': ' + str(ee) + '\n')
             if image.endswith('.eps'):
